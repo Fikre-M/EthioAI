@@ -1,5 +1,33 @@
 // Tour Types
 
+export interface MeetingPoint {
+  name: string
+  address: string
+  coordinates: {
+    lat: number
+    lng: number
+  }
+  instructions: string
+  contactPhone?: string
+  contactEmail?: string
+  meetingTime: string
+  landmarks?: string[]
+}
+
+export interface Review {
+  id: string
+  userId: string
+  userName: string
+  userAvatar: string
+  rating: number
+  title: string
+  comment: string
+  date: Date
+  helpful: number
+  verified: boolean
+  images?: string[]
+}
+
 export interface Tour {
   id: string
   title: string
@@ -27,6 +55,8 @@ export interface Tour {
   availability: TourAvailability[]
   tags: string[]
   featured: boolean
+  meetingPoint?: MeetingPoint
+  reviews?: Review[]
   createdAt: Date
   updatedAt: Date
 }
