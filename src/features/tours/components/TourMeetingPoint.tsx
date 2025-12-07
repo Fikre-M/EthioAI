@@ -1,4 +1,4 @@
-// Icons will be inline SVG
+import { MapView } from '@/components/map'
 
 export interface MeetingPoint {
   name: string
@@ -28,23 +28,24 @@ export const TourMeetingPoint = ({ meetingPoint }: TourMeetingPointProps) => {
   return (
     <div className="space-y-6">
       {/* Map */}
-      <div className="relative h-64 md:h-80 rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-700">
-        {/* Placeholder map - Replace with actual map component */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="text-center">
-            <svg className="w-12 h-12 text-orange-600 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-            </svg>
-            <p className="text-gray-600 dark:text-gray-400">Map View</p>
-            <p className="text-sm text-gray-500 dark:text-gray-500 mt-1">
-              {coordinates.lat.toFixed(6)}, {coordinates.lng.toFixed(6)}
-            </p>
-          </div>
-        </div>
+      <div className="relative">
+        <MapView
+          center={coordinates}
+          zoom={15}
+          markers={[
+            {
+              id: 'meeting-point',
+              lat: coordinates.lat,
+              lng: coordinates.lng,
+              title: name,
+              description: address,
+            },
+          ]}
+          className="h-64 md:h-80"
+        />
 
         {/* Map Overlay Buttons */}
-        <div className="absolute top-4 right-4 flex flex-col gap-2">
+        <div className="absolute top-4 right-4 flex flex-col gap-2 z-10">
           <a
             href={mapsUrl}
             target="_blank"
