@@ -6,7 +6,9 @@ import { BookingFormData, BookingItem, AddOn } from '@/types/booking'
 import { Tour } from '@/types/tour'
 import { Button } from '@components/common/Button/Button'
 import { Input } from '@components/common/Input/Input'
-import { FaCalendar, FaUsers, FaChild, FaUtensils, FaCar, FaUserTie, FaPlus, FaMinus } from 'react-icons/fa'
+import { useAvailability } from '@/hooks/useAvailability'
+import WaitlistModal from './WaitlistModal'
+import { FaCalendar, FaUsers, FaChild, FaUtensils, FaCar, FaUserTie, FaPlus, FaMinus, FaExclamationTriangle, FaCheckCircle, FaSpinner } from 'react-icons/fa'
 
 interface BookingFormProps {
   tour: Tour
@@ -46,6 +48,10 @@ export default function BookingForm({ tour }: BookingFormProps) {
   })
 
   const [showAvailability, setShowAvailability] = useState(false)
+  const [showWaitlistModal, setShowWaitlistModal] = useState(false)
+  
+  // Check availability when date changes
+  const { availability, loading: availabilityLoading } = useAvailability(tour.id, formData.date)
 
   const isDateUnavailable = (date: string) => {
     return UNAVAILABLE_DATES.includes(date)
@@ -143,8 +149,38 @@ export default function BookingForm({ tour }: BookingFormProps) {
             className={isDateUnavailable(formData.date) && formData.date ? 'border-red-500' : ''}
             required
           />
-          {formData.date && isDateUnavailable(formData.date) && (
-            <p className="text-red-600 text-sm mt-1">This date is not available</p>
+          
+          {/* Availability Indicator */}
+          {formData.date && (
+            <div className="mt-2">
+              {availabilityLoading ? (
+                <div className="flex items-center gap-2 text-gray-600 text-sm">
+                  <FaSpinner className="animate-spin" />
+                  <span>Checking availability...</span>
+                </div>
+              ) : availability ? (
+                <>
+                  {availability.isFullyBooked ? (
+                    <div className="flex items-center gap-2 text-red-600 text-sm bg-red-50 p-3 rounded-lg">
+                      <FaExclamationTriangle />
+                      <span className="font-medium">Fully booked for this date</span>
+                    </div>
+                  ) : availability.spotsLeft <= 5 ? (
+                    <div className="flex items-center gap-2 text-orange-600 text-sm bg-orange-50 p-3 rounded-lg">
+                      <FaExclamationTriangle />
+                      <span className="font-medium">Only {availability.spotsLeft} spot{availability.spotsLeft > 1 ? 's' : ''} left!</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2 text-green-600 text-sm bg-green-50 p-3 rounded-lg">
+                      <FaCheckCircle />
+                      <span className="font-medium">Available - {availability.spotsLeft} spots remaining</span>
+                    </div>
+                  )}
+                </>
+              ) : isDateUnavailable(formData.date) ? (
+                <p className="text-red-600 text-sm">This date is not available</p>
+              ) : null}
+            </div>
           )}
         </div>
         <button
@@ -357,19 +393,50 @@ export default function BookingForm({ tour }: BookingFormProps) {
         </p>
       </div>
 
-      {/* Submit Button */}
-      <Button
-        type="submit"
-        variant="primary"
-        className="w-full py-4 text-lg font-semibold"
-        disabled={!formData.date || !formData.contactName || !formData.contactEmail || isDateUnavailable(formData.date)}
-      >
-        Add to Cart - ${calculateTotal()}
-      </Button>
-      
-      <p className="text-xs text-gray-500 text-center">
-        You won't be charged yet. Review your booking in the cart.
-      </p>
+      {/* Submit Button or Waitlist */}
+      {availability?.isFullyBooked ? (
+        <div className="space-y-3">
+          <Button
+            type="button"
+            variant="outline"
+            className="w-full py-4 text-lg font-semibold border-orange-600 text-orange-600 hover:bg-orange-50"
+            onClick={() => setShowWaitlistModal(true)}
+          >
+            Join Waitlist
+          </Button>
+          <p className="text-xs text-gray-500 text-center">
+            We'll notify you if spots become available
+          </p>
+        </div>
+      ) : (
+        <>
+          <Button
+            type="submit"
+            variant="primary"
+            className="w-full py-4 text-lg font-semibold"
+            disabled={!formData.date || !formData.contactName || !formData.contactEmail || isDateUnavailable(formData.date) || availabilityLoading}
+          >
+            {availabilityLoading ? 'Checking availability...' : `Add to Cart - $${calculateTotal()}`}
+          </Button>
+          
+          <p className="text-xs text-gray-500 text-center">
+            You won't be charged yet. Review your booking in the cart.
+          </p>
+        </>
+      )}
+
+      {/* Waitlist Modal */}
+      <WaitlistModal
+        isOpen={showWaitlistModal}
+        onClose={() => setShowWaitlistModal(false)}
+        tourId={tour.id}
+        tourName={tour.title}
+        date={formData.date}
+        participants={{
+          adults: formData.adults,
+          children: formData.children,
+        }}
+      />
     </form>
   )
 }
