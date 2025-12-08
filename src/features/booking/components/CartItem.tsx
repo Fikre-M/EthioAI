@@ -1,7 +1,7 @@
 import { useDispatch } from 'react-redux'
-import { removeFromCart } from '@store/slices/bookingSlice'
+import { removeFromCart, updateParticipants } from '@store/slices/bookingSlice'
 import { BookingItem } from '@/types/booking'
-import { FaTrash, FaCalendar, FaUsers, FaMapMarkerAlt, FaClock, FaUtensils, FaCar, FaUserTie } from 'react-icons/fa'
+import { FaTrash, FaCalendar, FaUsers, FaMapMarkerAlt, FaClock, FaUtensils, FaCar, FaUserTie, FaPlus, FaMinus } from 'react-icons/fa'
 
 interface CartItemProps {
   item: BookingItem
@@ -12,6 +12,26 @@ export default function CartItem({ item }: CartItemProps) {
 
   const handleRemove = () => {
     dispatch(removeFromCart(item.id))
+  }
+
+  const handleUpdateParticipants = (type: 'adults' | 'children', increment: boolean) => {
+    const newAdults = type === 'adults' 
+      ? increment 
+        ? Math.min(item.participants.adults + 1, 20)
+        : Math.max(item.participants.adults - 1, 1)
+      : item.participants.adults
+      
+    const newChildren = type === 'children'
+      ? increment
+        ? Math.min(item.participants.children + 1, 20)
+        : Math.max(item.participants.children - 1, 0)
+      : item.participants.children
+    
+    dispatch(updateParticipants({
+      id: item.id,
+      adults: newAdults,
+      children: newChildren,
+    }))
   }
 
   const getAddOnIcon = (type: string) => {
@@ -56,14 +76,6 @@ export default function CartItem({ item }: CartItemProps) {
             </div>
 
             <div className="flex items-center text-gray-600">
-              <FaUsers className="w-4 h-4 mr-2 text-orange-500" />
-              <span className="text-sm">
-                {item.participants.adults} Adult{item.participants.adults > 1 ? 's' : ''}
-                {item.participants.children > 0 && `, ${item.participants.children} Child${item.participants.children > 1 ? 'ren' : ''}`}
-              </span>
-            </div>
-
-            <div className="flex items-center text-gray-600">
               <FaMapMarkerAlt className="w-4 h-4 mr-2 text-orange-500" />
               <span className="text-sm">{item.meetingPoint}</span>
             </div>
@@ -71,6 +83,61 @@ export default function CartItem({ item }: CartItemProps) {
             <div className="flex items-center text-gray-600">
               <FaClock className="w-4 h-4 mr-2 text-orange-500" />
               <span className="text-sm">{item.duration}</span>
+            </div>
+          </div>
+
+          {/* Editable Participants */}
+          <div className="mb-4 space-y-3">
+            <h4 className="text-sm font-medium text-gray-700">Participants:</h4>
+            
+            {/* Adults */}
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <FaUsers className="text-gray-600" />
+                <span className="text-sm">Adults</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => handleUpdateParticipants('adults', false)}
+                  className="w-7 h-7 flex items-center justify-center rounded-full border border-gray-300 hover:border-orange-600 hover:text-orange-600 transition-colors"
+                  disabled={item.participants.adults <= 1}
+                >
+                  <FaMinus size={10} />
+                </button>
+                <span className="w-6 text-center font-semibold">{item.participants.adults}</span>
+                <button
+                  onClick={() => handleUpdateParticipants('adults', true)}
+                  className="w-7 h-7 flex items-center justify-center rounded-full border border-gray-300 hover:border-orange-600 hover:text-orange-600 transition-colors"
+                  disabled={item.participants.adults >= 20}
+                >
+                  <FaPlus size={10} />
+                </button>
+              </div>
+            </div>
+
+            {/* Children */}
+            <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div className="flex items-center gap-2">
+                <FaUsers className="text-gray-600" />
+                <span className="text-sm">Children</span>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => handleUpdateParticipants('children', false)}
+                  className="w-7 h-7 flex items-center justify-center rounded-full border border-gray-300 hover:border-orange-600 hover:text-orange-600 transition-colors"
+                  disabled={item.participants.children <= 0}
+                >
+                  <FaMinus size={10} />
+                </button>
+                <span className="w-6 text-center font-semibold">{item.participants.children}</span>
+                <button
+                  onClick={() => handleUpdateParticipants('children', true)}
+                  className="w-7 h-7 flex items-center justify-center rounded-full border border-gray-300 hover:border-orange-600 hover:text-orange-600 transition-colors"
+                  disabled={item.participants.children >= 20}
+                >
+                  <FaPlus size={10} />
+                </button>
+              </div>
             </div>
           </div>
 

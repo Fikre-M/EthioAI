@@ -37,8 +37,20 @@ export interface BookingFormData {
   contactPhone: string
 }
 
+export interface PromoCode {
+  code: string
+  discount: number // percentage or fixed amount
+  type: 'percentage' | 'fixed'
+  minPurchase?: number
+  maxDiscount?: number
+  expiryDate?: string
+}
+
 export interface CartState {
   items: BookingItem[]
   totalItems: number
+  subtotal: number
+  discount: number
   totalPrice: number
+  appliedPromo: PromoCode | null
 }
