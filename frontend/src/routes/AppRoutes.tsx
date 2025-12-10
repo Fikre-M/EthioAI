@@ -4,6 +4,7 @@ import { HomePage } from '@features/dashboard/pages'
 import { ChatPage } from '@features/chat/pages'
 import { BookingPage, CartPage, CheckoutPage, MyBookingsPage } from '@features/booking/pages'
 import { PaymentPage, ConfirmationPage } from '@features/payment/pages'
+import { CultureHubPage, VirtualMuseumPage, ArticlePage } from '@features/cultural/pages'
 import { MainLayout } from '@components/layout'
 import { PrivateRoute } from './PrivateRoute'
 import { PublicRoute } from './PublicRoute'
@@ -112,7 +113,18 @@ export const AppRoutes = () => {
 
         <Route
           path={ROUTES.CULTURAL}
-          element={<PlaceholderPage title="Cultural Experiences" icon="🎭" />}
+          element={<CultureHubPage />}
+        />
+
+        {/* Cultural sub-routes */}
+        <Route
+          path="/cultural/museum/:museumId?"
+          element={<VirtualMuseumPage />}
+        />
+        
+        <Route
+          path="/cultural/article/:articleId"
+          element={<ArticlePage />}
         />
 
         <Route
