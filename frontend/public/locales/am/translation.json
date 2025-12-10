@@ -1,0 +1,94 @@
+{
+  "nav": {
+    "home": "መነሻ",
+    "tours": "ጉዞዎች",
+    "destinations": "መድረሻዎች",
+    "culture": "ባህል",
+    "marketplace": "ገበያ",
+    "about": "ስለ እኛ",
+    "contact": "አግኙን",
+    "dashboard": "ዳሽቦርድ",
+    "profile": "መገለጫ",
+    "bookings": "የእኔ ቦታ ማስያዝ",
+    "settings": "ቅንብሮች",
+    "signIn": "ግባ",
+    "signUp": "ተመዝገብ",
+    "signOut": "ውጣ"
+  },
+  "footer": {
+    "brand": {
+      "tagline": "የኢትዮጵያን ውበት እና ባህል ያግኙ",
+      "madeWith": "በኢትዮጵያ ውስጥ በ❤️ የተሰራ"
+    },
+    "explore": {
+      "title": "ያስሱ",
+      "tours": "ጉዞዎች",
+      "destinations": "መድረሻዎች",
+      "culture": "ባህል",
+      "marketplace": "ገበያ"
+    },
+    "company": {
+      "title": "ኩባንያ",
+      "about": "ስለ እኛ",
+      "careers": "ስራዎች",
+      "press": "ፕሬስ",
+      "blog": "ብሎግ"
+    },
+    "support": {
+      "title": "ድጋፍ",
+      "help": "የእገዛ ማዕከል",
+      "safety": "ደህንነት",
+      "terms": "የአገልግሎት ውል",
+      "privacy": "የግላዊነት ፖሊሲ"
+    },
+    "copyright": "© 2024 የኢትዮጵያ ቱሪዝም። ሁሉም መብቶች የተጠበቁ ናቸው።"
+  },
+  "auth": {
+    "login": {
+      "title": "ግባ",
+      "email": "ኢሜይል አድራሻ",
+      "password": "የይለፍ ቃል",
+      "submit": "ግባ",
+      "forgotPassword": "የይለፍ ቃል ረሳኽ?",
+      "noAccount": "መለያ የለህም?",
+      "signUp": "ተመዝገብ"
+    },
+    "register": {
+      "title": "መለያ ፍጠር",
+      "name": "ሙሉ ስም",
+      "email": "ኢሜይል አድራሻ",
+      "password": "የይለፍ ቃል",
+      "confirmPassword": "የይለፍ ቃል አረጋግጥ",
+      "submit": "መለያ ፍጠር",
+      "hasAccount": "መለያ አለህ?",
+      "signIn": "ግባ"
+    },
+    "forgotPassword": {
+      "title": "የይለፍ ቃል ዳግም አስጀምር",
+      "email": "ኢሜይል አድራሻ",
+      "submit": "የዳግም ማስጀመሪያ አገናኝ ላክ",
+      "backToLogin": "ወደ መግቢያ ተመለስ"
+    },
+    "errors": {
+      "invalidEmail": "እባክዎ ትክክለኛ ኢሜይል አድራሻ ያስገቡ",
+      "weakPassword": "የይለፍ ቃል ቢያንስ 8 ቁምፊዎች መሆን አለበት",
+      "passwordMismatch": "የይለፍ ቃሎች አይዛመዱም",
+      "loginFailed": "ልክ ያልሆነ ኢሜይል ወይም የይለፍ ቃል",
+      "networkError": "ከአገልጋዩ ጋር መገናኘት አልተቻለም"
+    }
+  },
+  "profile": {
+    "title": "የእኔ መገለጫ",
+    "edit": "መገለጫ አርትዕ",
+    "changePassword": "የይለፍ ቃል ቀይር",
+    "personalInfo": "የግል መረጃ",
+    "accountSettings": "የመለያ ቅንብሮች",
+    "emailVerified": "ኢሜይል ተረጋግጧል",
+    "emailNotVerified": "ኢሜይል አልተረጋገጠም",
+    "notifications": "የኢሜይል ማሳወቂያዎች",
+    "marketing": "የግብይት ኢሜይሎች",
+    "dangerZone": "አደገኛ ዞን",
+    "deleteAccount": "መለያ ሰርዝ",
+    "deleteWarning": "ይህ ድርጊት መልሰው ማግኘት አይቻልም"
+  }
+}
