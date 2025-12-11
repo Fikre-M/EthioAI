@@ -5,6 +5,7 @@ import DayPlan from '../components/DayPlan'
 import RouteOptimizer from '../components/RouteOptimizer'
 import BudgetCalculator from '../components/BudgetCalculator'
 import MapView from '../components/MapView'
+import WeatherForecast from '../components/WeatherForecast'
 import {
   FaCalendarAlt, FaPlus, FaMapMarkedAlt, FaSave, FaShare,
   FaClock, FaUsers, FaRoute, FaEdit, FaCalculator, FaMap
@@ -58,6 +59,7 @@ const ItineraryPage: React.FC = () => {
   const [showRouteOptimizer, setShowRouteOptimizer] = useState(false)
   const [showBudgetCalculator, setShowBudgetCalculator] = useState(false)
   const [showMapView, setShowMapView] = useState(false)
+  const [showWeatherForecast, setShowWeatherForecast] = useState(false)
 
   // Mock itinerary data
   const mockItinerary: Itinerary = {
@@ -361,6 +363,13 @@ const ItineraryPage: React.FC = () => {
                 </Button>
                 <Button
                   variant="outline"
+                  onClick={() => setShowWeatherForecast(true)}
+                >
+                  <FaCalendarAlt className="mr-2" />
+                  Weather
+                </Button>
+                <Button
+                  variant="outline"
                   onClick={() => setIsEditing(!isEditing)}
                 >
                   <FaEdit className="mr-2" />
@@ -514,6 +523,30 @@ const ItineraryPage: React.FC = () => {
           isOpen={showMapView}
           onClose={() => setShowMapView(false)}
         />
+
+        {/* Weather Forecast Modal */}
+        {showWeatherForecast && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                <h2 className="text-2xl font-bold text-gray-900">Weather Forecast</h2>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowWeatherForecast(false)}
+                  className="p-2"
+                >
+                  ✕
+                </Button>
+              </div>
+              <div className="p-6">
+                <WeatherForecast
+                  dates={itinerary.days.map(day => day.date)}
+                  location={itinerary.destination}
+                />
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

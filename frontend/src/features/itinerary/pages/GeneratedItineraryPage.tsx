@@ -4,6 +4,7 @@ import { Button } from '@components/common/Button/Button'
 import { TripPreferencesData } from './GenerateItineraryPage'
 import { ItineraryItem, DayPlanData, Itinerary } from './ItineraryPage'
 import GeneratedDayPlan from '../components/GeneratedDayPlan'
+import WeatherForecast from '../components/WeatherForecast'
 import {
   FaRobot, FaArrowLeft, FaSave, FaEdit, FaShoppingCart, FaShare,
   FaCalendarAlt, FaMapMarkedAlt, FaDollarSign, FaUsers, FaClock,
@@ -17,6 +18,7 @@ const GeneratedItineraryPage: React.FC = () => {
   const [generatedItinerary, setGeneratedItinerary] = useState<Itinerary | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [selectedDay, setSelectedDay] = useState(0)
+  const [showWeather, setShowWeather] = useState(false)
 
   useEffect(() => {
     if (!preferences) {
@@ -426,6 +428,15 @@ const GeneratedItineraryPage: React.FC = () => {
               </Button>
               
               <Button
+                onClick={() => setShowWeather(!showWeather)}
+                variant="outline"
+                className="w-full"
+              >
+                <FaCalendarAlt className="mr-2" />
+                {showWeather ? 'Hide Weather' : 'Show Weather'}
+              </Button>
+              
+              <Button
                 onClick={() => alert('Share functionality coming soon!')}
                 variant="outline"
                 className="w-full"
@@ -511,6 +522,14 @@ const GeneratedItineraryPage: React.FC = () => {
           </div>
         </div>
 
+        {/* Weather Forecast */}
+        {showWeather && (
+          <WeatherForecast
+            dates={generatedItinerary.days.map(day => day.date)}
+            location={generatedItinerary.destination}
+          />
+        )}
+
         {/* Customization Tips */}
         <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6">
           <div className="flex items-start">
@@ -522,6 +541,7 @@ const GeneratedItineraryPage: React.FC = () => {
                 <li>• All activities are suggestions - you can replace or remove any item</li>
                 <li>• Prices are estimates and may vary based on season and availability</li>
                 <li>• Save your itinerary to access it later and make bookings</li>
+                <li>• Check weather forecast to pack appropriately and plan indoor alternatives</li>
               </ul>
             </div>
           </div>
