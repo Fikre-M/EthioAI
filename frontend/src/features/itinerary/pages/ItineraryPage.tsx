@@ -6,9 +6,13 @@ import RouteOptimizer from '../components/RouteOptimizer'
 import BudgetCalculator from '../components/BudgetCalculator'
 import MapView from '../components/MapView'
 import WeatherForecast from '../components/WeatherForecast'
+import ItineraryExport from '../components/ItineraryExport'
+import ShareSettings from '../components/ShareSettings'
+import CollaborativeEditor from '../components/CollaborativeEditor'
 import {
   FaCalendarAlt, FaPlus, FaMapMarkedAlt, FaSave, FaShare,
-  FaClock, FaUsers, FaRoute, FaEdit, FaCalculator, FaMap
+  FaClock, FaUsers, FaRoute, FaCalculator, FaMap,
+  FaDownload, FaUserFriends
 } from 'react-icons/fa'
 
 export interface ItineraryItem {
@@ -60,6 +64,11 @@ const ItineraryPage: React.FC = () => {
   const [showBudgetCalculator, setShowBudgetCalculator] = useState(false)
   const [showMapView, setShowMapView] = useState(false)
   const [showWeatherForecast, setShowWeatherForecast] = useState(false)
+  const [showExportModal, setShowExportModal] = useState(false)
+  const [showShareSettings, setShowShareSettings] = useState(false)
+  const [isShared, setIsShared] = useState(false)
+  const [userRole, setUserRole] = useState<'owner' | 'editor' | 'viewer'>('owner')
+  const [useCollaborativeEditor, setUseCollaborativeEditor] = useState(false)
 
   // Mock itinerary data
   const mockItinerary: Itinerary = {
@@ -222,17 +231,21 @@ const ItineraryPage: React.FC = () => {
   }
 
   const handleShareItinerary = () => {
-    // Share itinerary logic
-    if (navigator.share) {
-      navigator.share({
-        title: itinerary?.title,
-        text: itinerary?.description,
-        url: window.location.href
-      })
-    } else {
-      navigator.clipboard.writeText(window.location.href)
-      alert('Itinerary link copied to clipboard!')
-    }
+    setShowShareSettings(true)
+  }
+
+  const handleExportItinerary = () => {
+    setShowExportModal(true)
+  }
+
+  const handleShareSettings = (settings: any) => {
+    setIsShared(true)
+    console.log('Share settings updated:', settings)
+    // In a real app, this would make an API call to update sharing settings
+  }
+
+  const toggleCollaborativeMode = () => {
+    setUseCollaborativeEditor(!useCollaborativeEditor)
   }
 
   const handleOptimizeRoute = (optimizedItems: ItineraryItem[]) => {
@@ -370,10 +383,18 @@ const ItineraryPage: React.FC = () => {
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={() => setIsEditing(!isEditing)}
+                  onClick={handleExportItinerary}
                 >
-                  <FaEdit className="mr-2" />
-                  {isEditing ? 'View Mode' : 'Edit'}
+                  <FaDownload className="mr-2" />
+                  Export
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={toggleCollaborativeMode}
+                  className={useCollaborativeEditor ? 'bg-blue-50 text-blue-600' : ''}
+                >
+                  <FaUserFriends className="mr-2" />
+                  {useCollaborativeEditor ? 'Exit Collab' : 'Collaborate'}
                 </Button>
                 <Button
                   variant="outline"
@@ -460,15 +481,24 @@ const ItineraryPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Main Content - Day Plan */}
+          {/* Main Content - Day Plan or Collaborative Editor */}
           <div className="lg:col-span-3">
-            {itinerary.days[selectedDay] && (
-              <DayPlan
-                day={itinerary.days[selectedDay]}
-                dayNumber={getDayNumber(itinerary.days[selectedDay].date)}
-                isEditing={isEditing}
-                onUpdate={(updatedDay) => handleUpdateDay(selectedDay, updatedDay)}
+            {useCollaborativeEditor ? (
+              <CollaborativeEditor
+                itinerary={itinerary}
+                onUpdate={setItinerary}
+                userRole={userRole}
+                isShared={isShared}
               />
+            ) : (
+              itinerary.days[selectedDay] && (
+                <DayPlan
+                  day={itinerary.days[selectedDay]}
+                  dayNumber={getDayNumber(itinerary.days[selectedDay].date)}
+                  isEditing={isEditing}
+                  onUpdate={(updatedDay) => handleUpdateDay(selectedDay, updatedDay)}
+                />
+              )
             )}
           </div>
         </div>
@@ -547,6 +577,21 @@ const ItineraryPage: React.FC = () => {
             </div>
           </div>
         )}
+
+        {/* Export Modal */}
+        <ItineraryExport
+          itinerary={itinerary}
+          isOpen={showExportModal}
+          onClose={() => setShowExportModal(false)}
+        />
+
+        {/* Share Settings Modal */}
+        <ShareSettings
+          itineraryId={itinerary.id}
+          isOpen={showShareSettings}
+          onClose={() => setShowShareSettings(false)}
+          onShare={handleShareSettings}
+        />
       </div>
     </div>
   )

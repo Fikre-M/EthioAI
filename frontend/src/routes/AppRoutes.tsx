@@ -6,7 +6,7 @@ import { BookingPage, CartPage, CheckoutPage, MyBookingsPage } from '@features/b
 import { PaymentPage, ConfirmationPage } from '@features/payment/pages'
 import { CultureHubPage, VirtualMuseumPage, ArticlePage, ArtifactDetailPage, ArticleEditorPage, CulturalCategoriesPage, LanguagePage, RecipesPage, RecipeDetailPage, CulturalLearningHub, CulturalCommunityHub, ContributePage, CulturalQuizPage } from '@features/cultural/pages'
 import { TransportPage, FlightsPage, CarRentalPage } from '@features/transport/pages'
-import { ItineraryPage, GenerateItineraryPage, GeneratedItineraryPage } from '@features/itinerary/pages'
+import { ItineraryPage, GenerateItineraryPage, GeneratedItineraryPage, SharedItineraryPage, CollaborationDemoPage } from '@features/itinerary/pages'
 import { MainLayout } from '@components/layout'
 import { PrivateRoute } from './PrivateRoute'
 import { PublicRoute } from './PublicRoute'
@@ -209,6 +209,16 @@ export const AppRoutes = () => {
         <Route
           path="/itinerary/generated"
           element={<GeneratedItineraryPage />}
+        />
+        
+        <Route
+          path="/itinerary/shared/:token"
+          element={<SharedItineraryPage />}
+        />
+        
+        <Route
+          path="/itinerary/collaboration-demo"
+          element={<CollaborationDemoPage />}
         />
 
         <Route
