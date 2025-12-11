@@ -241,6 +241,13 @@ const TransportPage: React.FC = () => {
               <FaCar className="mr-2" />
               Rent a Car
             </Button>
+            <Button 
+              onClick={() => navigate('/itinerary')}
+              className="bg-white text-purple-600 hover:bg-gray-100"
+            >
+              <FaCalendarAlt className="mr-2" />
+              Plan Itinerary
+            </Button>
           </div>
         </div>
       </div>
