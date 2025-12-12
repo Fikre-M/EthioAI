@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { Button } from '@components/common/Button/Button'
+import ProductCart from '../components/ProductCart'
+import ProductReview from '../components/ProductReview'
 import { Product } from './MarketplacePage'
 import {
   FaHeart, FaShoppingCart, FaStar, FaMapMarkerAlt, FaShieldAlt,
@@ -48,6 +50,7 @@ const ProductDetailPage: React.FC = () => {
   const { productId } = useParams<{ productId: string }>()
   const navigate = useNavigate()
   const [product, setProduct] = useState<Product | null>(null)
+  const [showCart, setShowCart] = useState(false)
   const [reviews, setReviews] = useState<Review[]>([])
   const [relatedProducts, setRelatedProducts] = useState<RelatedProduct[]>([])
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
@@ -252,7 +255,8 @@ Each component is carefully selected and sourced directly from Ethiopian artisan
 
   const handleAddToCart = () => {
     console.log('Added to cart:', { productId, quantity })
-    // Add to cart logic
+    // Add to cart logic - for now just show the cart
+    setShowCart(true)
   }
 
   const handleWishlistToggle = () => {
@@ -847,128 +851,46 @@ Each component is carefully selected and sourced directly from Ethiopian artisan
             )}
 
             {selectedTab === 'reviews' && (
-              <div className="space-y-6">
-                {/* Reviews Summary */}
-                <div className="bg-gray-50 rounded-xl p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-semibold">Customer Reviews</h3>
-                    <Button variant="outline">Write a Review</Button>
-                  </div>
-                  <div className="flex items-center space-x-6">
-                    <div className="text-center">
-                      <div className="text-4xl font-bold text-gray-900">{product.rating}</div>
-                      <div className="flex items-center justify-center mb-1">
-                        {renderStars(product.rating)}
-                      </div>
-                      <div className="text-sm text-gray-600">{product.reviewCount} reviews</div>
-                    </div>
-                    <div className="flex-1">
-                      {[5, 4, 3, 2, 1].map((stars) => (
-                        <div key={stars} className="flex items-center mb-1">
-                          <span className="text-sm w-8">{stars}</span>
-                          <FaStar className="text-yellow-400 mr-2" />
-                          <div className="flex-1 bg-gray-200 rounded-full h-2 mr-2">
-                            <div
-                              className="bg-yellow-400 h-2 rounded-full"
-                              style={{ width: `${Math.random() * 80 + 10}%` }}
-                            ></div>
-                          </div>
-                          <span className="text-sm text-gray-600 w-8">
-                            {Math.floor(Math.random() * 50)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Individual Reviews */}
-                <div className="space-y-6">
-                  {reviews.map((review) => (
-                    <div key={review.id} className="border-b border-gray-200 pb-6 last:border-b-0">
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center">
-                          <div className="w-10 h-10 bg-gray-300 rounded-full flex items-center justify-center mr-3">
-                            <span className="font-medium text-sm">
-                              {review.userName.split(' ').map(n => n[0]).join('')}
-                            </span>
-                          </div>
-                          <div>
-                            <div className="flex items-center">
-                              <span className="font-medium text-gray-900">{review.userName}</span>
-                              {review.verified && (
-                                <span className="ml-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-                                  Verified Purchase
-                                </span>
-                              )}
-                            </div>
-                            <div className="flex items-center">
-                              {renderStars(review.rating)}
-                              <span className="ml-2 text-sm text-gray-600">
-                                {new Date(review.createdAt).toLocaleDateString()}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <h4 className="font-medium text-gray-900 mb-2">{review.title}</h4>
-                      <p className="text-gray-700 mb-3">{review.content}</p>
-                      
-                      {review.images && review.images.length > 0 && (
-                        <div className="flex space-x-2 mb-3">
-                          {review.images.map((image, index) => (
-                            <img
-                              key={index}
-                              src={image}
-                              alt={`Review image ${index + 1}`}
-                              className="w-16 h-16 object-cover rounded-lg"
-                            />
-                          ))}
-                        </div>
-                      )}
-                      
-                      <div className="flex items-center space-x-4 text-sm">
-                        <button className="flex items-center text-gray-600 hover:text-green-600">
-                          <FaThumbsUp className="mr-1" />
-                          Helpful ({review.helpful})
-                        </button>
-                        <button className="flex items-center text-gray-600 hover:text-red-600">
-                          <FaThumbsDown className="mr-1" />
-                          Not Helpful ({review.notHelpful})
-                        </button>
-                        <button className="flex items-center text-gray-600 hover:text-blue-600">
-                          <FaReply className="mr-1" />
-                          Reply
-                        </button>
-                      </div>
-                      
-                      {review.replies && review.replies.length > 0 && (
-                        <div className="mt-4 ml-8 space-y-3">
-                          {review.replies.map((reply) => (
-                            <div key={reply.id} className="bg-gray-50 rounded-lg p-3">
-                              <div className="flex items-center mb-2">
-                                <span className={`font-medium ${reply.isVendor ? 'text-blue-600' : 'text-gray-900'}`}>
-                                  {reply.userName}
-                                </span>
-                                {reply.isVendor && (
-                                  <span className="ml-2 bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
-                                    Vendor
-                                  </span>
-                                )}
-                                <span className="ml-2 text-sm text-gray-600">
-                                  {new Date(reply.createdAt).toLocaleDateString()}
-                                </span>
-                              </div>
-                              <p className="text-gray-700">{reply.content}</p>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <ProductReview
+                productId={productId || ''}
+                reviews={reviews.map(review => ({
+                  ...review,
+                  photos: review.images?.map((url, index) => ({ id: `photo-${index}`, url })) || []
+                }))}
+                onAddReview={(reviewData) => {
+                  const newReview: Review = {
+                    ...reviewData,
+                    id: `review-${Date.now()}`,
+                    images: reviewData.photos.map(photo => photo.url),
+                    helpful: 0,
+                    notHelpful: 0,
+                    createdAt: new Date().toISOString(),
+                    replies: []
+                  }
+                  setReviews([...reviews, newReview])
+                }}
+                onUpdateReview={(reviewId, updates) => {
+                  setReviews(reviews.map(review => 
+                    review.id === reviewId ? { ...review, ...updates } : review
+                  ))
+                }}
+                onDeleteReview={(reviewId) => {
+                  setReviews(reviews.filter(review => review.id !== reviewId))
+                }}
+                onHelpfulVote={(reviewId, isHelpful) => {
+                  setReviews(reviews.map(review => 
+                    review.id === reviewId 
+                      ? { 
+                          ...review, 
+                          helpful: isHelpful ? review.helpful + 1 : review.helpful,
+                          notHelpful: !isHelpful ? review.notHelpful + 1 : review.notHelpful
+                        }
+                      : review
+                  ))
+                }}
+                canReview={true}
+                userHasPurchased={true}
+              />
             )}
 
             {selectedTab === 'shipping' && (
@@ -1142,6 +1064,12 @@ Each component is carefully selected and sourced directly from Ethiopian artisan
           </div>
         </div>
       )}
+
+      {/* Product Cart Modal */}
+      <ProductCart
+        isOpen={showCart}
+        onClose={() => setShowCart(false)}
+      />
     </div>
   )
 }

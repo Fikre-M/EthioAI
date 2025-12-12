@@ -7,7 +7,7 @@ import { PaymentPage, ConfirmationPage } from '@features/payment/pages'
 import { CultureHubPage, VirtualMuseumPage, ArticlePage, ArtifactDetailPage, ArticleEditorPage, CulturalCategoriesPage, LanguagePage, RecipesPage, RecipeDetailPage, CulturalLearningHub, CulturalCommunityHub, ContributePage, CulturalQuizPage } from '@features/cultural/pages'
 import { TransportPage, FlightsPage, CarRentalPage } from '@features/transport/pages'
 import { ItineraryPage, GenerateItineraryPage, GeneratedItineraryPage, SharedItineraryPage, CollaborationDemoPage } from '@features/itinerary/pages'
-import { MarketplacePage, ProductDetailPage, CategoriesPage, CategoryPage } from '@features/marketplace/pages'
+import { MarketplacePage, ProductDetailPage, CategoriesPage, CategoryPage, MyOrdersPage, VendorPage, VendorDashboardPage } from '@features/marketplace/pages'
 import { MainLayout } from '@components/layout'
 import { PrivateRoute } from './PrivateRoute'
 import { PublicRoute } from './PublicRoute'
@@ -240,6 +240,29 @@ export const AppRoutes = () => {
         <Route
           path="/marketplace/category/:categoryId"
           element={<CategoryPage />}
+        />
+        
+        <Route
+          path="/marketplace/orders"
+          element={
+            <PrivateRoute>
+              <MyOrdersPage />
+            </PrivateRoute>
+          }
+        />
+        
+        <Route
+          path="/marketplace/vendor/:vendorId"
+          element={<VendorPage />}
+        />
+        
+        <Route
+          path="/marketplace/vendor-dashboard"
+          element={
+            <PrivateRoute>
+              <VendorDashboardPage />
+            </PrivateRoute>
+          }
         />
 
         <Route
