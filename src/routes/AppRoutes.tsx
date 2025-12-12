@@ -7,6 +7,7 @@ import { PaymentPage, ConfirmationPage } from '@features/payment/pages'
 import { CultureHubPage, VirtualMuseumPage, ArticlePage, ArtifactDetailPage, ArticleEditorPage, CulturalCategoriesPage, LanguagePage, RecipesPage, RecipeDetailPage, CulturalLearningHub, CulturalCommunityHub, ContributePage, CulturalQuizPage } from '@features/cultural/pages'
 import { TransportPage, FlightsPage, CarRentalPage } from '@features/transport/pages'
 import { ItineraryPage, GenerateItineraryPage, GeneratedItineraryPage, SharedItineraryPage, CollaborationDemoPage } from '@features/itinerary/pages'
+import { MarketplacePage, ProductDetailPage } from '@features/marketplace/pages'
 import { MainLayout } from '@components/layout'
 import { PrivateRoute } from './PrivateRoute'
 import { PublicRoute } from './PublicRoute'
@@ -223,7 +224,12 @@ export const AppRoutes = () => {
 
         <Route
           path={ROUTES.MARKETPLACE}
-          element={<PlaceholderPage title="Marketplace" icon="🛍️" />}
+          element={<MarketplacePage />}
+        />
+        
+        <Route
+          path="/marketplace/product/:productId"
+          element={<ProductDetailPage />}
         />
 
         <Route
