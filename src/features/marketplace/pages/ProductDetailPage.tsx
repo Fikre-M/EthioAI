@@ -7,7 +7,8 @@ import {
   FaTruck, FaArrowLeft, FaShare, FaFlag, FaCheck, FaClock,
   FaExclamationTriangle, FaPlus, FaMinus, FaEye, FaThumbsUp,
   FaThumbsDown, FaReply, FaImage, FaPlay, FaExpand, FaChevronLeft,
-  FaChevronRight, FaStore, FaPhone, FaEnvelope, FaGlobe
+  FaChevronRight, FaStore, FaPhone, FaEnvelope, FaGlobe, FaTimes,
+  FaRegHeart, FaFire, FaGift, FaSpinner, FaBox, FaAward, FaCertificate
 } from 'react-icons/fa'
 
 interface Review {
@@ -71,7 +72,21 @@ const ProductDetailPage: React.FC = () => {
 
 The Ethiopian coffee ceremony is a cornerstone of social and cultural life, representing hospitality, friendship, and respect. This set allows you to bring this beautiful tradition into your own home, creating meaningful moments with family and friends.
 
-Each component is carefully selected and sourced directly from Ethiopian artisans, ensuring authenticity and supporting local communities. The coffee beans are freshly roasted and packaged to preserve their exceptional flavor profile.`,
+Each component is carefully selected and sourced directly from Ethiopian artisans, ensuring authenticity and supporting local communities. The coffee beans are freshly roasted and packaged to preserve their exceptional flavor profile.
+
+**What's Included:**
+- 1 Traditional Jebena (Clay Coffee Pot)
+- 6 Ceremonial Cups (Cini)
+- 1 Roasting Pan (Menkeshkesh)
+- 500g Premium Ethiopian Coffee Beans
+- Authentic Ethiopian Frankincense
+- Complete Instruction Guide
+- Certificate of Authenticity
+
+**Care Instructions:**
+- Hand wash the jebena and cups with warm water
+- Store coffee beans in a cool, dry place
+- Use frankincense sparingly for authentic aroma`,
     price: 89.99,
     originalPrice: 119.99,
     discount: 25,
@@ -82,7 +97,10 @@ Each component is carefully selected and sourced directly from Ethiopian artisan
       '/products/coffee-set-2.jpg',
       '/products/coffee-set-3.jpg',
       '/products/coffee-set-4.jpg',
-      '/products/coffee-set-5.jpg'
+      '/products/coffee-set-5.jpg',
+      '/products/coffee-set-6.jpg',
+      '/products/coffee-set-7.jpg',
+      '/products/coffee-set-8.jpg'
     ],
     category: 'Food & Beverages',
     subcategory: 'Coffee',
@@ -103,7 +121,9 @@ Each component is carefully selected and sourced directly from Ethiopian artisan
     isWishlisted: false,
     isFeatured: true,
     isNew: false,
-    createdAt: '2024-01-15'
+    createdAt: '2024-01-15',
+    madeInEthiopia: true,
+    popularity: 95
   }
 
   const mockReviews: Review[] = [
@@ -159,31 +179,59 @@ Each component is carefully selected and sourced directly from Ethiopian artisan
   const mockRelatedProducts: RelatedProduct[] = [
     {
       id: 'prod-004',
-      name: 'Ethiopian Spice Collection',
+      name: 'Ethiopian Spice Collection - Berbere & Mitmita Blend',
       price: 34.99,
       rating: 4.7,
       image: '/products/spices-1.jpg'
     },
     {
       id: 'prod-006',
-      name: 'Ethiopian Honey Collection',
+      name: 'Pure Ethiopian Honey Collection - White & Forest Honey',
       price: 67.50,
       rating: 4.8,
       image: '/products/honey-1.jpg'
     },
     {
       id: 'prod-007',
-      name: 'Traditional Coffee Cups Set',
+      name: 'Traditional Handmade Coffee Cups Set (6 pieces)',
       price: 24.99,
       rating: 4.6,
       image: '/products/cups-1.jpg'
     },
     {
       id: 'prod-008',
-      name: 'Ethiopian Frankincense',
+      name: 'Authentic Ethiopian Frankincense - Premium Grade',
       price: 19.99,
       rating: 4.5,
       image: '/products/frankincense-1.jpg'
+    },
+    {
+      id: 'prod-009',
+      name: 'Ethiopian Traditional Roasting Pan - Menkeshkesh',
+      price: 45.00,
+      rating: 4.4,
+      image: '/products/roasting-pan-1.jpg'
+    },
+    {
+      id: 'prod-010',
+      name: 'Single Origin Ethiopian Coffee Beans - Yirgacheffe',
+      price: 28.99,
+      rating: 4.9,
+      image: '/products/coffee-beans-1.jpg'
+    },
+    {
+      id: 'prod-011',
+      name: 'Handwoven Ethiopian Coffee Ceremony Mat',
+      price: 35.00,
+      rating: 4.3,
+      image: '/products/ceremony-mat-1.jpg'
+    },
+    {
+      id: 'prod-012',
+      name: 'Traditional Ethiopian Incense Burner - Clay',
+      price: 22.50,
+      rating: 4.6,
+      image: '/products/incense-burner-1.jpg'
     }
   ]
 
@@ -306,29 +354,61 @@ Each component is carefully selected and sourced directly from Ethiopian artisan
         </Button>
 
         <div className="grid lg:grid-cols-2 gap-12 mb-12">
-          {/* Product Images */}
+          {/* Enhanced Product Images Carousel */}
           <div className="space-y-4">
-            {/* Main Image */}
-            <div className="relative aspect-square bg-white rounded-2xl shadow-lg overflow-hidden">
+            {/* Main Image with Enhanced Features */}
+            <div className="relative aspect-square bg-white rounded-2xl shadow-lg overflow-hidden group">
               <img
                 src={product.images[selectedImageIndex] || '/placeholder-product.jpg'}
                 alt={product.name}
-                className="w-full h-full object-cover cursor-pointer"
+                className="w-full h-full object-cover cursor-pointer transition-transform group-hover:scale-105"
                 onClick={() => setShowImageModal(true)}
               />
+              
+              {/* Product Badges on Image */}
+              <div className="absolute top-4 left-4 flex flex-col space-y-2">
+                {product.madeInEthiopia && (
+                  <span className="bg-blue-500 text-white text-xs px-3 py-1 rounded-full flex items-center shadow-lg">
+                    <FaFlag className="mr-1" />
+                    Made in Ethiopia
+                  </span>
+                )}
+                {product.isFeatured && (
+                  <span className="bg-red-500 text-white text-xs px-3 py-1 rounded-full flex items-center shadow-lg">
+                    <FaFire className="mr-1" />
+                    Featured
+                  </span>
+                )}
+                {product.isNew && (
+                  <span className="bg-green-500 text-white text-xs px-3 py-1 rounded-full flex items-center shadow-lg">
+                    <FaGift className="mr-1" />
+                    New Arrival
+                  </span>
+                )}
+                {product.discount && (
+                  <span className="bg-orange-500 text-white text-xs px-3 py-1 rounded-full shadow-lg">
+                    -{product.discount}% OFF
+                  </span>
+                )}
+              </div>
+
+              {/* Image Counter */}
+              <div className="absolute top-4 right-4 bg-black bg-opacity-60 text-white text-xs px-2 py-1 rounded-full">
+                {selectedImageIndex + 1} / {product.images.length}
+              </div>
               
               {/* Navigation Arrows */}
               {product.images.length > 1 && (
                 <>
                   <button
                     onClick={() => handleImageNavigation('prev')}
-                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 transition-all"
+                    className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-3 hover:bg-opacity-75 transition-all opacity-0 group-hover:opacity-100"
                   >
                     <FaChevronLeft />
                   </button>
                   <button
                     onClick={() => handleImageNavigation('next')}
-                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 transition-all"
+                    className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black bg-opacity-50 text-white rounded-full p-3 hover:bg-opacity-75 transition-all opacity-0 group-hover:opacity-100"
                   >
                     <FaChevronRight />
                   </button>
@@ -338,32 +418,74 @@ Each component is carefully selected and sourced directly from Ethiopian artisan
               {/* Expand Button */}
               <button
                 onClick={() => setShowImageModal(true)}
-                className="absolute top-4 right-4 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 transition-all"
+                className="absolute bottom-4 right-4 bg-black bg-opacity-50 text-white rounded-full p-2 hover:bg-opacity-75 transition-all opacity-0 group-hover:opacity-100"
+                title="View full screen"
               >
                 <FaExpand />
               </button>
+
+              {/* Wishlist Button */}
+              <button
+                onClick={handleWishlistToggle}
+                className="absolute bottom-4 left-4 bg-white bg-opacity-90 text-gray-700 rounded-full p-2 hover:bg-opacity-100 transition-all shadow-lg"
+                title={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+              >
+                {isWishlisted ? (
+                  <FaHeart className="text-red-500" />
+                ) : (
+                  <FaRegHeart />
+                )}
+              </button>
             </div>
 
-            {/* Thumbnail Images */}
+            {/* Enhanced Thumbnail Gallery */}
             {product.images.length > 1 && (
-              <div className="flex space-x-2 overflow-x-auto">
-                {product.images.map((image, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setSelectedImageIndex(index)}
-                    className={`flex-shrink-0 w-20 h-20 rounded-lg overflow-hidden border-2 transition-all ${
-                      selectedImageIndex === index ? 'border-blue-500' : 'border-gray-200'
-                    }`}
-                  >
-                    <img
-                      src={image || '/placeholder-product.jpg'}
-                      alt={`${product.name} ${index + 1}`}
-                      className="w-full h-full object-cover"
-                    />
-                  </button>
-                ))}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-medium text-gray-700">Product Images</span>
+                  <span className="text-xs text-gray-500">{product.images.length} photos</span>
+                </div>
+                <div className="grid grid-cols-4 gap-2 max-h-32 overflow-y-auto">
+                  {product.images.map((image, index) => (
+                    <button
+                      key={index}
+                      onClick={() => setSelectedImageIndex(index)}
+                      className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all hover:scale-105 ${
+                        selectedImageIndex === index 
+                          ? 'border-blue-500 ring-2 ring-blue-200' 
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <img
+                        src={image || '/placeholder-product.jpg'}
+                        alt={`${product.name} view ${index + 1}`}
+                        className="w-full h-full object-cover"
+                      />
+                      {selectedImageIndex === index && (
+                        <div className="absolute inset-0 bg-blue-500 bg-opacity-20 flex items-center justify-center">
+                          <FaCheck className="text-blue-600 bg-white rounded-full p-1" />
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
+
+            {/* Image Actions */}
+            <div className="flex items-center justify-between text-sm text-gray-600">
+              <button
+                onClick={() => setShowImageModal(true)}
+                className="flex items-center hover:text-blue-600 transition-colors"
+              >
+                <FaExpand className="mr-1" />
+                View full screen
+              </button>
+              <button className="flex items-center hover:text-blue-600 transition-colors">
+                <FaShare className="mr-1" />
+                Share images
+              </button>
+            </div>
           </div>
 
           {/* Product Info */}
@@ -386,47 +508,142 @@ Each component is carefully selected and sourced directly from Ethiopian artisan
               </div>
             </div>
 
-            {/* Price */}
-            <div className="flex items-center space-x-4">
-              <span className="text-4xl font-bold text-gray-900">{formatPrice(product.price)}</span>
-              {product.originalPrice && (
-                <span className="text-xl text-gray-500 line-through">
-                  {formatPrice(product.originalPrice)}
-                </span>
-              )}
-              {product.discount && (
-                <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                  -{product.discount}% OFF
-                </span>
-              )}
+            {/* Enhanced Price Section */}
+            <div className="bg-gray-50 rounded-xl p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <span className="text-4xl font-bold text-gray-900">{formatPrice(product.price)}</span>
+                  {product.originalPrice && (
+                    <div className="flex flex-col">
+                      <span className="text-lg text-gray-500 line-through">
+                        {formatPrice(product.originalPrice)}
+                      </span>
+                      <span className="text-sm text-green-600 font-medium">
+                        You save {formatPrice(product.originalPrice - product.price)}
+                      </span>
+                    </div>
+                  )}
+                </div>
+                {product.discount && (
+                  <div className="text-right">
+                    <span className="bg-red-500 text-white px-4 py-2 rounded-full text-lg font-bold">
+                      -{product.discount}% OFF
+                    </span>
+                    <div className="text-xs text-gray-600 mt-1">Limited time offer</div>
+                  </div>
+                )}
+              </div>
+
+              {/* Stock Status */}
+              <div className="flex items-center justify-between pt-4 border-t border-gray-200">
+                <div className="flex items-center space-x-3">
+                  {availabilityStatus.icon}
+                  <div>
+                    <span className={`font-medium ${availabilityStatus.color}`}>
+                      {availabilityStatus.text}
+                    </span>
+                    {product.availability === 'in-stock' && (
+                      <div className="text-sm text-gray-600">Ready to ship</div>
+                    )}
+                    {product.availability === 'limited' && (
+                      <div className="text-sm text-orange-600">Only few items left</div>
+                    )}
+                  </div>
+                </div>
+                
+                <div className="text-right">
+                  <div className="text-sm text-gray-600">Item #: {product.id.toUpperCase()}</div>
+                  <div className="text-xs text-gray-500">SKU: ETH-{product.id.slice(-3)}</div>
+                </div>
+              </div>
             </div>
 
-            {/* Vendor Info */}
-            <div className="bg-gray-50 rounded-xl p-4">
+            {/* Enhanced Vendor Information */}
+            <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center">
+                <h3 className="text-lg font-semibold text-gray-900 flex items-center">
                   <FaStore className="text-blue-600 mr-2" />
+                  Vendor Information
+                </h3>
+                {product.vendor.verified && (
+                  <span className="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">
+                    <FaShieldAlt className="mr-1" />
+                    Verified Seller
+                  </span>
+                )}
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-6">
+                <div className="space-y-3">
                   <div>
-                    <div className="flex items-center">
-                      <span className="font-medium text-gray-900">{product.vendor.name}</span>
-                      {product.vendor.verified && (
-                        <FaShieldAlt className="text-blue-500 ml-2" />
-                      )}
-                    </div>
-                    <div className="flex items-center text-sm text-gray-600">
+                    <div className="font-medium text-gray-900 text-lg">{product.vendor.name}</div>
+                    <div className="flex items-center text-gray-600 mt-1">
                       <FaMapMarkerAlt className="mr-1" />
                       {product.vendor.location}
                     </div>
                   </div>
-                </div>
-                <div className="text-right">
-                  <div className="flex items-center">
-                    {renderStars(product.vendor.rating)}
-                    <span className="ml-1 text-sm">{product.vendor.rating}</span>
+                  
+                  <div className="flex items-center space-x-4">
+                    <div className="flex items-center">
+                      {renderStars(product.vendor.rating)}
+                      <span className="ml-2 font-medium">{product.vendor.rating}</span>
+                    </div>
+                    <span className="text-sm text-gray-600">(4.9/5.0)</span>
                   </div>
-                  <Button variant="outline" size="sm" className="mt-2">
-                    Visit Store
-                  </Button>
+
+                  <div className="flex items-center space-x-4 text-sm text-gray-600">
+                    <div className="flex items-center">
+                      <FaBox className="mr-1" />
+                      <span>500+ products</span>
+                    </div>
+                    <div className="flex items-center">
+                      <FaAward className="mr-1" />
+                      <span>Top seller</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="text-sm text-gray-700">
+                    <strong>About this seller:</strong>
+                    <p className="mt-1">
+                      Family-owned business specializing in authentic Ethiopian coffee and traditional products. 
+                      Established in 1995, committed to fair trade and supporting local communities.
+                    </p>
+                  </div>
+                  
+                  <div className="flex space-x-2">
+                    <Button variant="outline" size="sm" className="flex-1">
+                      <FaStore className="mr-1" />
+                      Visit Store
+                    </Button>
+                    <Button variant="outline" size="sm" className="flex-1">
+                      <FaEnvelope className="mr-1" />
+                      Contact
+                    </Button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Seller Guarantees */}
+              <div className="border-t border-gray-200 pt-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                  <div className="flex flex-col items-center">
+                    <FaShieldAlt className="text-green-600 text-xl mb-1" />
+                    <span className="text-xs text-gray-600">Authenticity Guaranteed</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <FaTruck className="text-blue-600 text-xl mb-1" />
+                    <span className="text-xs text-gray-600">Fast Shipping</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <FaCertificate className="text-purple-600 text-xl mb-1" />
+                    <span className="text-xs text-gray-600">Quality Certified</span>
+                  </div>
+                  <div className="flex flex-col items-center">
+                    <FaHeart className="text-red-600 text-xl mb-1" />
+                    <span className="text-xs text-gray-600">Customer Care</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -443,44 +660,112 @@ Each component is carefully selected and sourced directly from Ethiopian artisan
               </div>
             </div>
 
-            {/* Quantity and Actions */}
-            <div className="space-y-4">
-              <div className="flex items-center space-x-4">
-                <span className="font-medium text-gray-900">Quantity:</span>
-                <div className="flex items-center border border-gray-300 rounded-lg">
-                  <button
-                    onClick={() => handleQuantityChange(-1)}
-                    className="p-2 hover:bg-gray-100 transition-colors"
-                    disabled={quantity <= 1}
-                  >
-                    <FaMinus />
-                  </button>
-                  <span className="px-4 py-2 font-medium">{quantity}</span>
-                  <button
-                    onClick={() => handleQuantityChange(1)}
-                    className="p-2 hover:bg-gray-100 transition-colors"
-                  >
-                    <FaPlus />
-                  </button>
+            {/* Enhanced Quantity and Purchase Section */}
+            <div className="bg-white border border-gray-200 rounded-xl p-6 space-y-6">
+              <h3 className="text-lg font-semibold text-gray-900">Purchase Options</h3>
+              
+              {/* Quantity Selector */}
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium text-gray-900">Quantity:</span>
+                  <span className="text-sm text-gray-600">
+                    {product.availability === 'limited' ? 'Limited stock available' : 'In stock'}
+                  </span>
                 </div>
+                <div className="flex items-center space-x-4">
+                  <div className="flex items-center border-2 border-gray-300 rounded-lg">
+                    <button
+                      onClick={() => handleQuantityChange(-1)}
+                      disabled={quantity <= 1}
+                      className="p-3 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <FaMinus />
+                    </button>
+                    <span className="px-6 py-3 font-medium text-lg min-w-[60px] text-center">{quantity}</span>
+                    <button
+                      onClick={() => handleQuantityChange(1)}
+                      disabled={quantity >= 10}
+                      className="p-3 hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <FaPlus />
+                    </button>
+                  </div>
+                  <div className="text-sm text-gray-600">
+                    <div>Total: <span className="font-bold text-lg text-gray-900">{formatPrice(product.price * quantity)}</span></div>
+                    {quantity > 1 && (
+                      <div className="text-xs">({formatPrice(product.price)} each)</div>
+                    )}
+                  </div>
+                </div>
+                {quantity >= 10 && (
+                  <div className="text-sm text-orange-600">Maximum quantity reached</div>
+                )}
               </div>
 
-              <div className="flex space-x-4">
+              {/* Purchase Buttons */}
+              <div className="space-y-3">
                 <Button
                   onClick={handleAddToCart}
                   disabled={product.availability === 'out-of-stock'}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 text-lg"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-lg font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <FaShoppingCart className="mr-2" />
-                  Add to Cart
+                  {product.availability === 'out-of-stock' ? (
+                    <>
+                      <FaExclamationTriangle className="mr-2" />
+                      Out of Stock
+                    </>
+                  ) : (
+                    <>
+                      <FaShoppingCart className="mr-2" />
+                      Add to Cart - {formatPrice(product.price * quantity)}
+                    </>
+                  )}
                 </Button>
-                <Button
-                  onClick={handleWishlistToggle}
-                  variant="outline"
-                  className={`px-6 py-3 ${isWishlisted ? 'text-red-600 border-red-300' : ''}`}
-                >
-                  <FaHeart className={isWishlisted ? 'text-red-500' : ''} />
-                </Button>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <Button
+                    variant="outline"
+                    className="py-3 border-2 border-orange-500 text-orange-600 hover:bg-orange-50"
+                    disabled={product.availability === 'out-of-stock'}
+                  >
+                    <FaShoppingCart className="mr-2" />
+                    Buy Now
+                  </Button>
+                  <Button
+                    onClick={handleWishlistToggle}
+                    variant="outline"
+                    className={`py-3 border-2 ${
+                      isWishlisted 
+                        ? 'border-red-500 text-red-600 bg-red-50' 
+                        : 'border-gray-300 text-gray-600 hover:bg-gray-50'
+                    }`}
+                  >
+                    <FaHeart className={`mr-2 ${isWishlisted ? 'text-red-500' : ''}`} />
+                    {isWishlisted ? 'Saved' : 'Save'}
+                  </Button>
+                </div>
+              </div>
+
+              {/* Purchase Benefits */}
+              <div className="border-t border-gray-200 pt-4">
+                <div className="grid grid-cols-1 gap-3 text-sm">
+                  <div className="flex items-center text-green-600">
+                    <FaCheck className="mr-2" />
+                    <span>30-day return policy</span>
+                  </div>
+                  <div className="flex items-center text-green-600">
+                    <FaShieldAlt className="mr-2" />
+                    <span>Authenticity guaranteed</span>
+                  </div>
+                  <div className="flex items-center text-green-600">
+                    <FaTruck className="mr-2" />
+                    <span>Free shipping on this item</span>
+                  </div>
+                  <div className="flex items-center text-green-600">
+                    <FaCertificate className="mr-2" />
+                    <span>Certificate of authenticity included</span>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -720,37 +1005,105 @@ Each component is carefully selected and sourced directly from Ethiopian artisan
           </div>
         </div>
 
-        {/* Related Products */}
-        <div className="bg-white rounded-2xl shadow-lg p-6">
-          <h3 className="text-2xl font-semibold mb-6">Related Products</h3>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {relatedProducts.map((relatedProduct) => (
-              <div
-                key={relatedProduct.id}
-                onClick={() => navigate(`/marketplace/product/${relatedProduct.id}`)}
-                className="cursor-pointer group"
+        {/* Enhanced Related Products */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="p-6 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <h3 className="text-2xl font-semibold text-gray-900">You Might Also Like</h3>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => navigate('/marketplace')}
               >
-                <div className="aspect-square bg-gray-200 rounded-lg overflow-hidden mb-3">
-                  <img
-                    src={relatedProduct.image}
-                    alt={relatedProduct.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
-                  />
-                </div>
-                <h4 className="font-medium text-gray-900 line-clamp-2 mb-1">
-                  {relatedProduct.name}
-                </h4>
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-gray-900">
-                    {formatPrice(relatedProduct.price)}
-                  </span>
-                  <div className="flex items-center">
-                    <FaStar className="text-yellow-400 mr-1" />
-                    <span className="text-sm">{relatedProduct.rating}</span>
+                View All Products
+              </Button>
+            </div>
+            <p className="text-gray-600 mt-2">Handpicked Ethiopian products similar to your selection</p>
+          </div>
+          
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {relatedProducts.map((relatedProduct) => (
+                <div
+                  key={relatedProduct.id}
+                  onClick={() => navigate(`/marketplace/product/${relatedProduct.id}`)}
+                  className="cursor-pointer group bg-gray-50 rounded-xl p-4 hover:shadow-lg transition-all"
+                >
+                  <div className="relative aspect-square bg-white rounded-lg overflow-hidden mb-4 shadow-sm">
+                    <img
+                      src={relatedProduct.image}
+                      alt={relatedProduct.name}
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                    />
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all"></div>
+                    
+                    {/* Quick Action Overlay */}
+                    <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button size="sm" className="bg-white text-gray-900 hover:bg-gray-100">
+                        <FaEye className="mr-1" />
+                        Quick View
+                      </Button>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h4 className="font-medium text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors">
+                      {relatedProduct.name}
+                    </h4>
+                    
+                    <div className="flex items-center space-x-2">
+                      <div className="flex items-center">
+                        {Array.from({ length: 5 }, (_, i) => (
+                          <FaStar
+                            key={i}
+                            className={`text-xs ${i < Math.floor(relatedProduct.rating) ? 'text-yellow-400' : 'text-gray-300'}`}
+                          />
+                        ))}
+                      </div>
+                      <span className="text-sm text-gray-600">({relatedProduct.rating})</span>
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="font-bold text-lg text-gray-900">
+                        {formatPrice(relatedProduct.price)}
+                      </span>
+                      <button className="text-gray-400 hover:text-red-500 transition-colors">
+                        <FaRegHeart />
+                      </button>
+                    </div>
+                    
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="w-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        console.log('Add to cart:', relatedProduct.id)
+                      }}
+                    >
+                      <FaShoppingCart className="mr-1" />
+                      Add to Cart
+                    </Button>
                   </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+          </div>
+          
+          {/* Browse More Section */}
+          <div className="bg-gray-50 p-6 text-center">
+            <h4 className="font-medium text-gray-900 mb-2">Discover More Ethiopian Products</h4>
+            <p className="text-gray-600 text-sm mb-4">Explore our complete collection of authentic Ethiopian crafts and products</p>
+            <div className="flex justify-center space-x-4">
+              <Button variant="outline" size="sm">
+                <FaStore className="mr-1" />
+                Browse by Category
+              </Button>
+              <Button variant="outline" size="sm">
+                <FaFlag className="mr-1" />
+                Made in Ethiopia
+              </Button>
+            </div>
           </div>
         </div>
       </div>
