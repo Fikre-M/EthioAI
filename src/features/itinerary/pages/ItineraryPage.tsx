@@ -9,10 +9,15 @@ import WeatherForecast from '../components/WeatherForecast'
 import ItineraryExport from '../components/ItineraryExport'
 import ShareSettings from '../components/ShareSettings'
 import CollaborativeEditor from '../components/CollaborativeEditor'
+import AITravelAssistant from '../components/AITravelAssistant'
+import SmartBudgetOptimizer from '../components/SmartBudgetOptimizer'
+import TravelRiskAssessment from '../components/TravelRiskAssessment'
+import AdvancedAnalyticsDashboard from '../components/AdvancedAnalyticsDashboard'
 import {
   FaCalendarAlt, FaPlus, FaMapMarkedAlt, FaSave, FaShare,
   FaClock, FaUsers, FaRoute, FaCalculator, FaMap,
-  FaDownload, FaUserFriends
+  FaDownload, FaUserFriends, FaRobot, FaChartBar,
+  FaShieldAlt, FaBrain
 } from 'react-icons/fa'
 
 export interface ItineraryItem {
@@ -69,6 +74,10 @@ const ItineraryPage: React.FC = () => {
   const [isShared, setIsShared] = useState(false)
   const [userRole, setUserRole] = useState<'owner' | 'editor' | 'viewer'>('owner')
   const [useCollaborativeEditor, setUseCollaborativeEditor] = useState(false)
+  const [showAIAssistant, setShowAIAssistant] = useState(false)
+  const [showBudgetOptimizer, setShowBudgetOptimizer] = useState(false)
+  const [showRiskAssessment, setShowRiskAssessment] = useState(false)
+  const [showAnalyticsDashboard, setShowAnalyticsDashboard] = useState(false)
 
   // Mock itinerary data
   const mockItinerary: Itinerary = {
@@ -351,13 +360,48 @@ const ItineraryPage: React.FC = () => {
                 </div>
               </div>
               
-              <div className="flex flex-wrap items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                {/* AI & Intelligence Features */}
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAIAssistant(true)}
+                  className="bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200 text-blue-700 hover:from-blue-100 hover:to-purple-100"
+                >
+                  <FaRobot className="mr-2" />
+                  AI Assistant
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowBudgetOptimizer(true)}
+                  className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+                >
+                  <FaBrain className="mr-2" />
+                  Smart Budget
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowAnalyticsDashboard(true)}
+                  className="bg-purple-50 border-purple-200 text-purple-700 hover:bg-purple-100"
+                >
+                  <FaChartBar className="mr-2" />
+                  Analytics
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => setShowRiskAssessment(true)}
+                  className="bg-orange-50 border-orange-200 text-orange-700 hover:bg-orange-100"
+                >
+                  <FaShieldAlt className="mr-2" />
+                  Risk Check
+                </Button>
+                
+                {/* Traditional Features */}
                 <Button
                   variant="outline"
                   onClick={() => setShowMapView(true)}
                 >
                   <FaMap className="mr-2" />
-                  Map View
+                  Map
                 </Button>
                 <Button
                   variant="outline"
@@ -365,14 +409,7 @@ const ItineraryPage: React.FC = () => {
                   disabled={!itinerary.days[selectedDay] || itinerary.days[selectedDay].items.length < 2}
                 >
                   <FaRoute className="mr-2" />
-                  Optimize Route
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowBudgetCalculator(true)}
-                >
-                  <FaCalculator className="mr-2" />
-                  Budget
+                  Route
                 </Button>
                 <Button
                   variant="outline"
@@ -591,6 +628,36 @@ const ItineraryPage: React.FC = () => {
           isOpen={showShareSettings}
           onClose={() => setShowShareSettings(false)}
           onShare={handleShareSettings}
+        />
+
+        {/* AI Travel Assistant */}
+        <AITravelAssistant
+          itinerary={itinerary}
+          isOpen={showAIAssistant}
+          onClose={() => setShowAIAssistant(false)}
+          onUpdateItinerary={setItinerary}
+        />
+
+        {/* Smart Budget Optimizer */}
+        <SmartBudgetOptimizer
+          itinerary={itinerary}
+          isOpen={showBudgetOptimizer}
+          onClose={() => setShowBudgetOptimizer(false)}
+          onUpdateItinerary={setItinerary}
+        />
+
+        {/* Travel Risk Assessment */}
+        <TravelRiskAssessment
+          itinerary={itinerary}
+          isOpen={showRiskAssessment}
+          onClose={() => setShowRiskAssessment(false)}
+        />
+
+        {/* Advanced Analytics Dashboard */}
+        <AdvancedAnalyticsDashboard
+          itinerary={itinerary}
+          isOpen={showAnalyticsDashboard}
+          onClose={() => setShowAnalyticsDashboard(false)}
         />
       </div>
     </div>

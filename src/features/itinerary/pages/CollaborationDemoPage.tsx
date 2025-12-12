@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from '@components/common/Button/Button'
 import {
   FaUsers, FaShare, FaDownload, FaEdit, FaEye, FaComments,
-  FaCalendarAlt, FaFilePdf, FaLink, FaUserPlus, FaCog,
+  FaFilePdf, FaUserPlus, FaCog,
   FaCheckCircle, FaArrowRight, FaPlay
 } from 'react-icons/fa'
 

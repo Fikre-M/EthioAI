@@ -4,14 +4,12 @@ import { Button } from '@components/common/Button/Button'
 import { Itinerary } from '../pages/ItineraryPage'
 import DayPlan from './DayPlan'
 import {
-  FaShare, FaUsers, FaComment, FaHeart, FaCopy, FaDownload,
-  FaCalendarPlus, FaEdit, FaEye, FaLock, FaUnlock, FaUserPlus,
-  FaExclamationTriangle, FaCheckCircle, FaArrowLeft
+  FaShare, FaUsers, FaComment, FaHeart, FaCopy,
+  FaExclamationTriangle, FaCheckCircle, FaArrowLeft, FaEye
 } from 'react-icons/fa'
 
 interface SharedItineraryProps {
   shareToken?: string
-  isPublic?: boolean
 }
 
 interface Comment {
@@ -36,8 +34,7 @@ interface Collaborator {
 }
 
 const SharedItinerary: React.FC<SharedItineraryProps> = ({
-  shareToken,
-  isPublic = false
+  shareToken
 }) => {
   const { token } = useParams<{ token: string }>()
   const navigate = useNavigate()
