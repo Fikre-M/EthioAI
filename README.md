@@ -2,6 +2,39 @@
 
 A modern, AI-powered tourism platform for Ethiopia featuring multilingual chat, tour booking, and integrated payment processing.
 
+## 📁 Project Structure
+
+```
+EthioAI/
+├── client/                 # Frontend React application
+│   ├── src/               # React source code
+│   ├── public/            # Static assets
+│   ├── docs/              # Frontend documentation
+│   └── package.json       # Frontend dependencies
+├── server/                 # Backend Node.js application
+│   ├── src/               # Server source code
+│   ├── routes/            # API routes
+│   ├── models/            # Database models
+│   └── package.json       # Backend dependencies
+└── README.md              # This file
+```
+
+## 🚀 Getting Started
+
+### Frontend (Client)
+```bash
+cd client
+npm install
+npm run dev
+```
+
+### Backend (Server)
+```bash
+cd server
+npm install
+npm run dev
+```
+
 ## ✨ Features
 
 ### 🤖 AI-Powered Chat
@@ -18,187 +51,51 @@ A modern, AI-powered tourism platform for Ethiopia featuring multilingual chat, 
 
 ### 💳 Payment Integration
 - **International**: Stripe (Credit/Debit cards)
-- **Local Ethiopian**: Chapa (Telebirr, CBE Birr, Bank transfers)
-- **Direct**: Telebirr integration with QR codes
-- Secure PCI DSS compliant processing
+- **Local**: Chapa (Ethiopian payment gateway)
 
 ### 🗺️ Interactive Maps
-- Mapbox integration for tour locations
-- Route visualization and meeting points
-- Location-based recommendations
+- Mapbox integration for location visualization
+- Tour route mapping
+- Point of interest markers
 
-### 🌍 Internationalization
-- Full i18n support with react-i18next
-- Dynamic language switching
-- Localized content and currency
+### 📱 Responsive Design
+- Mobile-first approach
+- Touch-friendly interfaces
+- Optimized for all screen sizes
 
-## 🚀 Quick Start
+## 🛠️ Technology Stack
 
-### Prerequisites
-- Node.js 18+ and npm
-- Git
+### Frontend
+- **React 18** with TypeScript
+- **Vite** for build tooling
+- **Tailwind CSS** for styling
+- **Redux Toolkit** for state management
+- **React Router** for navigation
+- **i18next** for internationalization
 
-### Installation
+### Backend
+- **Node.js** with Express
+- **TypeScript** for type safety
+- **MongoDB** for database
+- **JWT** for authentication
+- **Stripe & Chapa** for payments
 
-```bash
-# Clone the repository
-git clone https://github.com/Fikre-M/EthioAI.git
-cd EthioAI
+## 📖 Documentation
 
-# Install dependencies
-npm install
+Detailed documentation can be found in the `client/docs/` folder:
 
-# Set up environment variables
-cp .env.example .env
-# Edit .env with your API keys
-
-# Start development server
-npm run dev
-```
-
-Visit `http://localhost:3000` to see the application.
-
-### Environment Variables
-
-```env
-# API Configuration
-VITE_API_BASE_URL=http://localhost:3000/api
-
-# Payment Gateways
-VITE_STRIPE_PUBLIC_KEY=pk_test_...
-VITE_CHAPA_PUBLIC_KEY=CHAPA_...
-
-# Map Services
-VITE_MAPBOX_ACCESS_TOKEN=pk.eyJ1...
-
-# AI Services
-VITE_OPENAI_API_KEY=sk-...
-```
-
-## 🏗️ Architecture
-
-### Tech Stack
-- **Frontend**: React 18 + TypeScript + Vite
-- **Styling**: Tailwind CSS
-- **State Management**: Redux Toolkit
-- **Routing**: React Router v6
-- **Maps**: Mapbox GL JS
-- **Payments**: Stripe + Chapa APIs
-- **i18n**: react-i18next
-
-### Project Structure
-```
-src/
-├── features/           # Feature-based modules
-│   ├── auth/          # Authentication
-│   ├── booking/       # Tour booking
-│   ├── chat/          # AI chat interface
-│   ├── payment/       # Payment processing
-│   └── tours/         # Tour management
-├── components/        # Reusable UI components
-├── services/          # API integrations
-├── store/            # Redux state management
-└── utils/            # Utility functions
-```
-
-## 💻 Development
-
-### Available Scripts
-
-```bash
-npm run dev          # Start development server
-npm run build        # Build for production
-npm run preview      # Preview production build
-npm run lint         # Run ESLint
-npm run type-check   # TypeScript type checking
-```
-
-### Code Quality
-- ESLint + Prettier for code formatting
-- TypeScript strict mode
-- Husky pre-commit hooks
-- Conventional commit messages
-
-### Testing
-```bash
-npm run test         # Run unit tests
-npm run test:e2e     # Run end-to-end tests
-npm run test:coverage # Generate coverage report
-```
-
-## 🔧 Configuration
-
-### Payment Gateways
-
-#### Stripe Setup
-1. Create Stripe account at [stripe.com](https://stripe.com)
-2. Get publishable key from dashboard
-3. Add to `.env` as `VITE_STRIPE_PUBLIC_KEY`
-
-#### Chapa Setup
-1. Register at [chapa.co](https://chapa.co)
-2. Get API keys from dashboard
-3. Add to `.env` as `VITE_CHAPA_PUBLIC_KEY`
-
-### Map Integration
-1. Create Mapbox account at [mapbox.com](https://mapbox.com)
-2. Generate access token
-3. Add to `.env` as `VITE_MAPBOX_ACCESS_TOKEN`
-
-## 🚀 Deployment
-
-### Production Build
-```bash
-npm run build
-npm run preview  # Test production build locally
-```
-
-### Environment Setup
-- Configure production API endpoints
-- Set up SSL certificates
-- Configure payment gateway webhooks
-- Set up monitoring and logging
-
-### Deployment Platforms
-- **Vercel**: Zero-config deployment
-- **Netlify**: Static site hosting
-- **AWS**: Full cloud deployment
-- **Docker**: Containerized deployment
+- [Project Structure](client/docs/PROJECT_STRUCTURE.md)
+- [API Documentation](server/README.md)
+- [Feature Specifications](client/docs/)
 
 ## 🤝 Contributing
 
-### Development Workflow
 1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open Pull Request
-
-### Coding Standards
-- Follow TypeScript best practices
-- Use functional components with hooks
-- Write meaningful commit messages
-- Add tests for new features
-- Update documentation
+2. Create a feature branch
+3. Make your changes
+4. Test thoroughly
+5. Submit a pull request
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- Ethiopian tourism industry partners
-- Open source community
-- AI and machine learning researchers
-- Beta testers and early adopters
-
-## 📞 Support
-
-- **Documentation**: [docs/](./docs/)
-- **Issues**: [GitHub Issues](https://github.com/Fikre-M/EthioAI/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/Fikre-M/EthioAI/discussions)
-- **Email**: support@ethioai.com
-
----
-
-**Built with ❤️ for Ethiopian Tourism**
+This project is licensed under the MIT License.
