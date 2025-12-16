@@ -7,20 +7,20 @@ export const Footer = () => {
 
   return (
     <footer className="border-t bg-background">
-      <div className="container py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
           {/* Brand */}
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4 sm:col-span-2 lg:col-span-1">
             <div className="flex items-center space-x-2">
-              <span className="text-2xl">🌍</span>
-              <span className="text-lg font-bold text-gradient-ethiopian">
+              <span className="text-xl sm:text-2xl">🌍</span>
+              <span className="text-base sm:text-lg font-bold text-gradient-ethiopian">
                 {APP_NAME}
               </span>
             </div>
             <p className="text-sm text-muted-foreground">
               {t('footer.brand.tagline')}
             </p>
-            <div className="flex space-x-4">
+            <div className="flex space-x-3 sm:space-x-4">
               <a
                 href="https://facebook.com"
                 target="_blank"
@@ -59,25 +59,25 @@ export const Footer = () => {
 
           {/* Explore */}
           <div>
-            <h3 className="font-semibold mb-4">{t('footer.explore.title')}</h3>
+            <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">{t('footer.explore.title')}</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/tours" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/tours" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('footer.explore.tours')}
                 </Link>
               </li>
               <li>
-                <Link to="/destinations" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/destinations" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('footer.explore.destinations')}
                 </Link>
               </li>
               <li>
-                <Link to="/cultural" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/cultural" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('footer.explore.culture')}
                 </Link>
               </li>
               <li>
-                <Link to="/marketplace" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/marketplace" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('footer.explore.marketplace')}
                 </Link>
               </li>
@@ -86,25 +86,25 @@ export const Footer = () => {
 
           {/* Company */}
           <div>
-            <h3 className="font-semibold mb-4">{t('footer.company.title')}</h3>
+            <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">{t('footer.company.title')}</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/about" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/about" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('footer.company.about')}
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/contact" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('nav.contact')}
                 </Link>
               </li>
               <li>
-                <Link to="/careers" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/careers" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('footer.company.careers')}
                 </Link>
               </li>
               <li>
-                <Link to="/blog" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/blog" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('footer.company.blog')}
                 </Link>
               </li>
@@ -113,25 +113,25 @@ export const Footer = () => {
 
           {/* Support */}
           <div>
-            <h3 className="font-semibold mb-4">{t('footer.support.title')}</h3>
+            <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">{t('footer.support.title')}</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/help" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/help" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('footer.support.help')}
                 </Link>
               </li>
               <li>
-                <Link to="/faq" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/faq" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('footer.support.safety')}
                 </Link>
               </li>
               <li>
-                <Link to="/privacy" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/privacy" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('footer.support.privacy')}
                 </Link>
               </li>
               <li>
-                <Link to="/terms" className="text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/terms" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('footer.support.terms')}
                 </Link>
               </li>
@@ -140,13 +140,13 @@ export const Footer = () => {
         </div>
 
         {/* Bottom */}
-        <div className="mt-12 pt-8 border-t">
-          <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
-            <p className="text-sm text-muted-foreground">
+        <div className="mt-8 sm:mt-12 pt-6 sm:pt-8 border-t">
+          <div className="flex flex-col sm:flex-row justify-between items-center space-y-3 sm:space-y-0">
+            <p className="text-xs sm:text-sm text-muted-foreground text-center sm:text-left">
               {t('footer.copyright')}
             </p>
-            <div className="flex items-center space-x-4">
-              <span className="text-sm text-muted-foreground">{t('footer.brand.madeWith')}</span>
+            <div className="flex items-center">
+              <span className="text-xs sm:text-sm text-muted-foreground">{t('footer.brand.madeWith')}</span>
             </div>
           </div>
         </div>

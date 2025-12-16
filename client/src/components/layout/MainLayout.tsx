@@ -21,12 +21,12 @@ export const MainLayout = ({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col overflow-x-hidden max-w-full">
       {/* Header */}
       <Header />
 
       {/* Main Content */}
-      <div className="flex flex-1">
+      <div className="flex flex-1 min-w-0 overflow-hidden">
         {/* Sidebar (optional) */}
         {showSidebar && (
           <Sidebar 
@@ -36,8 +36,10 @@ export const MainLayout = ({
         )}
 
         {/* Page Content */}
-        <main className={`flex-1 ${showMobileNav ? 'pb-16 md:pb-0' : ''}`}>
-          {children || <Outlet />}
+        <main className={`flex-1 ${showMobileNav ? 'pb-14 sm:pb-16 lg:pb-0' : ''} min-w-0 overflow-x-hidden`}>
+          <div className="w-full min-w-0 overflow-x-hidden">
+            {children || <Outlet />}
+          </div>
         </main>
       </div>
 

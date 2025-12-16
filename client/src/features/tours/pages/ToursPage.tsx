@@ -220,21 +220,21 @@ export const ToursPage = () => {
   }
 
   return (
-    <div className="container py-6">
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-full overflow-hidden">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gradient-ethiopian mb-2">
+      <div className="mb-6 sm:mb-8 min-w-0">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gradient-ethiopian mb-2 line-clamp-2">
           Discover Ethiopia Tours
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm sm:text-base text-muted-foreground line-clamp-2">
           Explore our curated collection of tours across Ethiopia
         </p>
       </div>
 
       {/* Search & Sort Bar */}
-      <div className="mb-6 flex flex-col sm:flex-row gap-4">
+      <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:gap-4 min-w-0 overflow-hidden">
         {/* Search */}
-        <div className="flex-1">
+        <div className="w-full min-w-0">
           <TourSearchBar
             value={searchQuery}
             onChange={setSearchQuery}
@@ -245,21 +245,23 @@ export const ToursPage = () => {
         </div>
 
         {/* Sort */}
-        <TourSortDropdown
-          value={sortBy}
-          onChange={setSortBy}
-        />
+        <div className="w-full sm:w-auto sm:self-end flex-shrink-0">
+          <TourSortDropdown
+            value={sortBy}
+            onChange={setSortBy}
+          />
+        </div>
       </div>
 
       {/* Results Count */}
-      <div className="mb-4 text-sm text-gray-600 dark:text-gray-400">
+      <div className="mb-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
         Showing {filteredTours.length} of {tours.length} tours
       </div>
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 min-w-0 overflow-hidden">
         {/* Filters Sidebar */}
-        <div className="lg:col-span-1">
+        <div className="lg:col-span-1 order-2 lg:order-1 min-w-0">
           <EnhancedTourFilters
             filters={filters}
             onFiltersChange={handleFiltersChange}
@@ -268,7 +270,7 @@ export const ToursPage = () => {
         </div>
 
         {/* Tours Grid */}
-        <div className="lg:col-span-3">
+        <div className="lg:col-span-3 order-1 lg:order-2 min-w-0 overflow-hidden">
           <TourGrid tours={filteredTours} isLoading={isLoading} />
         </div>
       </div>
