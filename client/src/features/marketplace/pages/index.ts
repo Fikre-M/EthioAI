@@ -1,0 +1,7 @@
+export { default as MarketplacePage } from './MarketplacePage'
+export { default as ProductDetailPage } from './ProductDetailPage'
+export { default as CategoriesPage } from './CategoriesPage'
+export { default as CategoryPage } from './CategoryPage'
+export { default as MyOrdersPage } from './MyOrdersPage'
+export { default as VendorPage } from './VendorPage'
+export { default as VendorDashboardPage } from './VendorDashboardPage'

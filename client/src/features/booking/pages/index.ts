@@ -1,0 +1,6 @@
+export { default as BookingPage } from './BookingPage'
+export { default as CartPage } from './CartPage'
+export { default as CheckoutPage } from './CheckoutPage'
+export { default as PaymentPage } from './PaymentPage'
+export { default as ConfirmationPage } from './ConfirmationPage'
+export { default as MyBookingsPage } from './MyBookingsPage'
