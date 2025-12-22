@@ -1,6 +1,9 @@
 import React, { useState } from 'react'
+import { useDispatch } from 'react-redux'
 import { Button } from '@components/common/Button/Button'
 import { Product } from '../pages/MarketplacePage'
+import { addToCart } from '@store/slices/bookingSlice'
+import { BookingItem } from '@/types/booking'
 import {
   FaHeart, FaShoppingCart, FaStar, FaMapMarkerAlt,
   FaShieldAlt, FaTruck, FaFire, FaGift, FaRegHeart,
@@ -22,6 +25,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
   onAddToCart,
   onClick
 }) => {
+  const dispatch = useDispatch()
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [isImageLoading, setIsImageLoading] = useState(true)
 
@@ -50,6 +54,31 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   const handleAddToCartClick = (e: React.MouseEvent) => {
     e.stopPropagation()
+    
+    // Convert Product to BookingItem format
+    const bookingItem: BookingItem = {
+      id: `product-${product.id}-${Date.now()}`,
+      tourId: product.id,
+      tourName: product.name,
+      tourImage: product.images[0] || '/placeholder-product.jpg',
+      date: new Date().toISOString().split('T')[0], // Today's date as default
+      participants: {
+        adults: 1,
+        children: 0,
+      },
+      pricePerAdult: product.price,
+      pricePerChild: 0,
+      addOns: [],
+      totalPrice: product.price,
+      meetingPoint: product.vendor.location,
+      duration: 'Product',
+      specialRequests: '',
+    }
+    
+    // Add to cart using Redux
+    dispatch(addToCart(bookingItem))
+    
+    // Also call the original callback if provided
     onAddToCart(product.id)
   }
 
@@ -124,28 +153,28 @@ const ProductCard: React.FC<ProductCardProps> = ({
               </div>
             )}
 
-            {/* Badges */}
-            <div className="absolute top-2 left-2 flex flex-col space-y-1">
+            {/* Badges - Back to top-left with proper constraints */}
+            <div className="absolute top-2 left-2 flex flex-col space-y-1 max-w-[calc(100%-5rem)] z-20">
               {product.madeInEthiopia && (
-                <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full flex items-center">
-                  <FaFlag className="mr-1" />
-                  Made in Ethiopia
+                <span className="bg-blue-500/95 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full flex items-center shadow-lg max-w-full">
+                  <FaFlag className="mr-1 flex-shrink-0 text-xs" />
+                  <span className="truncate">Made in Ethiopia</span>
                 </span>
               )}
               {product.isFeatured && (
-                <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full flex items-center">
-                  <FaFire className="mr-1" />
-                  Featured
+                <span className="bg-red-500/95 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full flex items-center shadow-lg">
+                  <FaFire className="mr-1 flex-shrink-0 text-xs" />
+                  <span className="truncate">Featured</span>
                 </span>
               )}
               {product.isNew && (
-                <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center">
-                  <FaGift className="mr-1" />
-                  New
+                <span className="bg-green-500/95 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full flex items-center shadow-lg">
+                  <FaGift className="mr-1 flex-shrink-0 text-xs" />
+                  <span className="truncate">New</span>
                 </span>
               )}
               {product.discount && (
-                <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full">
+                <span className="bg-orange-500/95 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full shadow-lg">
                   -{product.discount}%
                 </span>
               )}
@@ -295,28 +324,28 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
 
-        {/* Badges */}
-        <div className="absolute top-2 left-2 flex flex-col space-y-1">
+        {/* Badges - Back to top-left with proper constraints */}
+        <div className="absolute top-2 left-2 flex flex-col space-y-1 max-w-[calc(100%-5rem)] z-20">
           {product.madeInEthiopia && (
-            <span className="bg-blue-500 text-white text-xs px-2 py-1 rounded-full flex items-center">
-              <FaFlag className="mr-1" />
-              Made in Ethiopia
+            <span className="bg-blue-500/95 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full flex items-center shadow-lg max-w-full">
+              <FaFlag className="mr-1 flex-shrink-0 text-xs" />
+              <span className="truncate">Made in Ethiopia</span>
             </span>
           )}
           {product.isFeatured && (
-            <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full flex items-center">
-              <FaFire className="mr-1" />
-              Featured
+            <span className="bg-red-500/95 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full flex items-center shadow-lg">
+              <FaFire className="mr-1 flex-shrink-0 text-xs" />
+              <span className="truncate">Featured</span>
             </span>
           )}
           {product.isNew && (
-            <span className="bg-green-500 text-white text-xs px-2 py-1 rounded-full flex items-center">
-              <FaGift className="mr-1" />
-              New
+            <span className="bg-green-500/95 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full flex items-center shadow-lg">
+              <FaGift className="mr-1 flex-shrink-0 text-xs" />
+              <span className="truncate">New</span>
             </span>
           )}
           {product.discount && (
-            <span className="bg-orange-500 text-white text-xs px-2 py-1 rounded-full">
+            <span className="bg-orange-500/95 backdrop-blur-sm text-white text-xs px-2 py-1 rounded-full shadow-lg">
               -{product.discount}%
             </span>
           )}
@@ -334,8 +363,8 @@ const ProductCard: React.FC<ProductCardProps> = ({
           )}
         </button>
 
-        {/* Quick Actions Overlay */}
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity">
+        {/* Quick Actions Overlay - Positioned to avoid badge conflict */}
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 to-transparent p-4 opacity-0 group-hover:opacity-100 transition-opacity z-10">
           <Button
             onClick={handleAddToCartClick}
             disabled={product.availability === 'out-of-stock'}

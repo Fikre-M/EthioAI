@@ -41,9 +41,11 @@ export const TourGrid = ({ tours, isLoading }: TourGridProps) => {
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full min-w-0 overflow-hidden">
       {tours.map((tour) => (
-        <TourCard key={tour.id} tour={tour} />
+        <div key={tour.id} className="min-w-0 w-full">
+          <TourCard tour={tour} />
+        </div>
       ))}
     </div>
   )

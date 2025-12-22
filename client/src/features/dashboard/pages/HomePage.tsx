@@ -106,10 +106,10 @@ export const HomePage = () => {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-orange-50 via-yellow-50 to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-20">
-        <div className="container">
-          <div className="max-w-3xl">
-            <h1 className="text-5xl md:text-6xl font-bold mb-6">
+      <section className="relative bg-gradient-to-br from-orange-50 via-yellow-50 to-green-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 py-12 sm:py-16 lg:py-20">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-4xl">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 sm:mb-6 leading-tight">
               {isAuthenticated ? (
                 <>
                   Welcome back, <span className="text-gradient-ethiopian">{user?.name?.split(' ')[0]}</span>! 👋
@@ -120,15 +120,15 @@ export const HomePage = () => {
                 </>
               )}
             </h1>
-            <p className="text-xl text-muted-foreground mb-8">
+            <p className="text-base sm:text-lg lg:text-xl text-muted-foreground mb-6 sm:mb-8 leading-relaxed">
               Your AI-powered companion for exploring the ancient wonders, vibrant culture, and breathtaking landscapes of Ethiopia.
             </p>
-            <div className="flex flex-wrap gap-4">
-              <Link to="/tours">
-                <Button variant="primary" size="lg">Explore Tours</Button>
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
+              <Link to="/tours" className="w-full sm:w-auto">
+                <Button variant="primary" size="lg" className="w-full sm:w-auto">Explore Tours</Button>
               </Link>
-              <Link to="/chat">
-                <Button variant="outline" size="lg">Chat with AI Guide</Button>
+              <Link to="/chat" className="w-full sm:w-auto">
+                <Button variant="outline" size="lg" className="w-full sm:w-auto">Chat with AI Guide</Button>
               </Link>
             </div>
           </div>
@@ -136,85 +136,87 @@ export const HomePage = () => {
       </section>
 
       {/* Quick Access Cards */}
-      <section className="py-16 bg-background">
-        <div className="container">
-          <h2 className="text-3xl font-bold mb-8">Quick Access</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <section className="py-12 sm:py-16 bg-background">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-2xl sm:text-3xl font-bold mb-6 sm:mb-8">Quick Access</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 w-full min-w-0 overflow-hidden">
             {quickAccessCards.map((card) => (
-              <Link key={card.title} to={card.link}>
-                <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer">
-                  <div className="p-6">
-                    <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${card.color} flex items-center justify-center text-3xl mb-4`}>
-                      {card.icon}
+              <div key={card.title} className="min-w-0 w-full">
+                <Link to={card.link} className="block w-full min-w-0">
+                  <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer w-full min-w-0">
+                    <div className="p-4 sm:p-6 min-w-0">
+                      <div className={`w-12 h-12 sm:w-16 sm:h-16 rounded-2xl bg-gradient-to-br ${card.color} flex items-center justify-center text-2xl sm:text-3xl mb-3 sm:mb-4 flex-shrink-0`}>
+                        {card.icon}
+                      </div>
+                      <h3 className="text-lg sm:text-xl font-semibold mb-2 line-clamp-2">{card.title}</h3>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{card.description}</p>
                     </div>
-                    <h3 className="text-xl font-semibold mb-2">{card.title}</h3>
-                    <p className="text-sm text-muted-foreground">{card.description}</p>
-                  </div>
-                </Card>
-              </Link>
+                  </Card>
+                </Link>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
       {/* Featured Tours Carousel */}
-      <section className="py-16 bg-muted/30">
-        <div className="container">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-bold">Featured Tours</h2>
-            <Link to="/tours" className="text-primary hover:underline">
+      <section className="py-12 sm:py-16 bg-muted/30">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6 sm:mb-8 gap-4">
+            <h2 className="text-2xl sm:text-3xl font-bold">Featured Tours</h2>
+            <Link to="/tours" className="text-primary hover:underline text-sm sm:text-base">
               View All →
             </Link>
           </div>
 
           {/* Carousel */}
-          <div className="relative">
+          <div className="relative overflow-hidden">
             {/* Main Carousel */}
-            <div className="overflow-hidden rounded-2xl">
+            <div className="overflow-hidden rounded-xl sm:rounded-2xl">
               <div
-                className="flex transition-transform duration-500 ease-out"
+                className="flex transition-transform duration-500 ease-out h-auto lg:h-96"
                 style={{ transform: `translateX(-${currentSlide * 100}%)` }}
               >
                 {featuredTours.map((tour) => (
-                  <div key={tour.id} className="min-w-full">
-                    <Card className="mx-2">
-                      <div className="grid md:grid-cols-2 gap-6 p-8">
+                  <div key={tour.id} className="min-w-full flex-shrink-0 px-1 sm:px-2">
+                    <Card className="overflow-hidden h-full">
+                      <div className="flex flex-col md:flex-row gap-3 sm:gap-4 lg:gap-6 p-3 sm:p-4 lg:p-6 min-w-0 h-full">
                         {/* Image */}
-                        <div className="flex items-center justify-center bg-gradient-to-br from-orange-100 to-yellow-100 dark:from-gray-800 dark:to-gray-700 rounded-xl h-64 md:h-full">
-                          <span className="text-9xl">{tour.image}</span>
+                        <div className="flex items-center justify-center bg-gradient-to-br from-orange-100 to-yellow-100 dark:from-gray-800 dark:to-gray-700 rounded-lg sm:rounded-xl h-40 sm:h-48 md:h-56 lg:h-64 md:w-1/2 flex-shrink-0 overflow-hidden">
+                          <span className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl">{tour.image}</span>
                         </div>
 
                         {/* Content */}
-                        <div className="flex flex-col justify-center">
-                          <div className="flex items-center gap-2 mb-3">
-                            <span className="text-yellow-500">⭐</span>
-                            <span className="font-semibold">{tour.rating}</span>
-                            <span className="text-sm text-muted-foreground">
+                        <div className="flex flex-col justify-center md:w-1/2 min-w-0 overflow-hidden">
+                          <div className="flex items-center gap-2 mb-2 sm:mb-3 min-w-0">
+                            <span className="text-yellow-500 flex-shrink-0">⭐</span>
+                            <span className="font-semibold text-sm sm:text-base flex-shrink-0">{tour.rating}</span>
+                            <span className="text-xs sm:text-sm text-muted-foreground truncate min-w-0">
                               ({tour.reviews} reviews)
                             </span>
                           </div>
-                          <h3 className="text-3xl font-bold mb-3">{tour.title}</h3>
-                          <p className="text-lg text-muted-foreground mb-4">
+                          <h3 className="text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold mb-2 sm:mb-3 leading-tight line-clamp-2">{tour.title}</h3>
+                          <p className="text-sm sm:text-base text-muted-foreground mb-3 sm:mb-4 line-clamp-2">
                             📍 {tour.location}
                           </p>
-                          <div className="flex items-center gap-4 mb-6">
-                            <div className="flex items-center gap-2">
-                              <span className="text-muted-foreground">⏱️</span>
-                              <span>{tour.duration}</span>
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-3 sm:mb-4 min-w-0">
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <span className="text-muted-foreground text-sm">⏱️</span>
+                              <span className="text-sm sm:text-base whitespace-nowrap">{tour.duration}</span>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-2xl font-bold text-primary">
+                            <div className="flex items-center gap-2 flex-shrink-0">
+                              <span className="text-lg sm:text-xl md:text-2xl font-bold text-primary whitespace-nowrap">
                                 ${tour.price}
                               </span>
-                              <span className="text-sm text-muted-foreground">per person</span>
+                              <span className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">per person</span>
                             </div>
                           </div>
-                          <div className="flex gap-3">
-                            <Link to={`/tours/${tour.id}`}>
-                              <Button variant="primary">View Details</Button>
+                          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 min-w-0 mt-auto">
+                            <Link to={`/tours/${tour.id}`} className="flex-1 sm:flex-none min-w-0">
+                              <Button variant="primary" className="w-full sm:w-auto whitespace-nowrap" size="sm">View Details</Button>
                             </Link>
-                            <Link to={`/tours/${tour.id}/book`}>
-                              <Button variant="outline">Book Now</Button>
+                            <Link to={`/tours/${tour.id}/book`} className="flex-1 sm:flex-none min-w-0">
+                              <Button variant="outline" className="w-full sm:w-auto whitespace-nowrap" size="sm">Book Now</Button>
                             </Link>
                           </div>
                         </div>
@@ -228,32 +230,32 @@ export const HomePage = () => {
             {/* Navigation Buttons */}
             <button
               onClick={prevSlide}
-              className="absolute left-4 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-full p-3 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="absolute left-2 sm:left-4 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-full p-2 sm:p-3 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               aria-label="Previous slide"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </button>
             <button
               onClick={nextSlide}
-              className="absolute right-4 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-full p-3 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 rounded-full p-2 sm:p-3 shadow-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               aria-label="Next slide"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-4 h-4 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </button>
 
             {/* Dots Indicator */}
-            <div className="flex justify-center gap-2 mt-6">
+            <div className="flex justify-center gap-2 mt-4 sm:mt-6">
               {featuredTours.map((_, index) => (
                 <button
                   key={index}
                   onClick={() => setCurrentSlide(index)}
                   className={`w-2 h-2 rounded-full transition-all ${
                     index === currentSlide
-                      ? 'bg-primary w-8'
+                      ? 'bg-primary w-6 sm:w-8'
                       : 'bg-gray-300 dark:bg-gray-600'
                   }`}
                   aria-label={`Go to slide ${index + 1}`}
@@ -265,24 +267,24 @@ export const HomePage = () => {
       </section>
 
       {/* Stats Section */}
-      <section className="py-16 bg-background">
-        <div className="container">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <section className="py-12 sm:py-16 bg-background">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8">
             <div className="text-center">
-              <div className="text-4xl font-bold text-gradient-ethiopian mb-2">50+</div>
-              <div className="text-muted-foreground">Tour Packages</div>
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient-ethiopian mb-1 sm:mb-2">50+</div>
+              <div className="text-sm sm:text-base text-muted-foreground">Tour Packages</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-gradient-ethiopian mb-2">15+</div>
-              <div className="text-muted-foreground">Destinations</div>
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient-ethiopian mb-1 sm:mb-2">15+</div>
+              <div className="text-sm sm:text-base text-muted-foreground">Destinations</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-gradient-ethiopian mb-2">10K+</div>
-              <div className="text-muted-foreground">Happy Travelers</div>
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient-ethiopian mb-1 sm:mb-2">10K+</div>
+              <div className="text-sm sm:text-base text-muted-foreground">Happy Travelers</div>
             </div>
             <div className="text-center">
-              <div className="text-4xl font-bold text-gradient-ethiopian mb-2">4.8</div>
-              <div className="text-muted-foreground">Average Rating</div>
+              <div className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gradient-ethiopian mb-1 sm:mb-2">4.8</div>
+              <div className="text-sm sm:text-base text-muted-foreground">Average Rating</div>
             </div>
           </div>
         </div>
@@ -290,21 +292,21 @@ export const HomePage = () => {
 
       {/* CTA Section */}
       {!isAuthenticated && (
-        <section className="py-20 bg-gradient-to-br from-orange-500 to-red-500 text-white">
-          <div className="container text-center">
-            <h2 className="text-4xl font-bold mb-4">Ready to Start Your Journey?</h2>
-            <p className="text-xl mb-8 opacity-90">
+        <section className="py-16 sm:py-20 bg-gradient-to-br from-orange-500 to-red-500 text-white">
+          <div className="container mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold mb-3 sm:mb-4">Ready to Start Your Journey?</h2>
+            <p className="text-base sm:text-lg lg:text-xl mb-6 sm:mb-8 opacity-90">
               Join thousands of travelers discovering Ethiopia
             </p>
-            <div className="flex flex-wrap justify-center gap-4">
-              <Link to="/register">
-                <Button variant="secondary" size="lg">Create Account</Button>
+            <div className="flex flex-col sm:flex-row justify-center gap-3 sm:gap-4 max-w-md mx-auto">
+              <Link to="/register" className="flex-1 sm:flex-none">
+                <Button variant="secondary" size="lg" className="w-full sm:w-auto">Create Account</Button>
               </Link>
-              <Link to="/login">
+              <Link to="/login" className="flex-1 sm:flex-none">
                 <Button
                   variant="outline"
                   size="lg"
-                  className="border-white text-white hover:bg-white hover:text-orange-500"
+                  className="border-white text-white hover:bg-white hover:text-orange-500 w-full sm:w-auto"
                 >
                   Sign In
                 </Button>
