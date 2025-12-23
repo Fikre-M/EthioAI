@@ -1,10 +1,12 @@
-const express = require('express')
-const cors = require('cors')
-const helmet = require('helmet')
-const compression = require('compression')
-const cookieParser = require('cookie-parser')
-const rateLimit = require('express-rate-limit')
-require('dotenv').config()
+import express, { Request, Response, NextFunction } from 'express'
+import cors from 'cors'
+import helmet from 'helmet'
+import compression from 'compression'
+import cookieParser from 'cookie-parser'
+import rateLimit from 'express-rate-limit'
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 const app = express()
 const PORT = process.env.PORT || 5000
@@ -33,7 +35,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 app.use(cookieParser())
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({ 
     status: 'OK', 
     message: 'EthioAI Tourism Server is running',
@@ -42,7 +44,7 @@ app.get('/health', (req, res) => {
 })
 
 // Mock authentication endpoints for development
-app.post('/api/auth/login', async (req, res) => {
+app.post('/api/auth/login', async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body
 
@@ -91,7 +93,7 @@ app.post('/api/auth/login', async (req, res) => {
   }
 })
 
-app.post('/api/auth/register', async (req, res) => {
+app.post('/api/auth/register', async (req: Request, res: Response) => {
   try {
     const { name, email, password } = req.body
 
@@ -140,7 +142,7 @@ app.post('/api/auth/register', async (req, res) => {
   }
 })
 
-app.get('/api/auth/me', async (req, res) => {
+app.get('/api/auth/me', async (req: Request, res: Response) => {
   try {
     const authHeader = req.headers.authorization
     const token = authHeader && authHeader.split(' ')[1]
@@ -174,7 +176,7 @@ app.get('/api/auth/me', async (req, res) => {
   }
 })
 
-app.post('/api/auth/logout', async (req, res) => {
+app.post('/api/auth/logout', async (req: Request, res: Response) => {
   try {
     // In a real app, you might invalidate the token here
     return res.status(200).json({
@@ -190,7 +192,7 @@ app.post('/api/auth/logout', async (req, res) => {
   }
 })
 
-app.post('/api/auth/forgot-password', async (req, res) => {
+app.post('/api/auth/forgot-password', async (req: Request, res: Response) => {
   try {
     const { email } = req.body
 
@@ -217,7 +219,7 @@ app.post('/api/auth/forgot-password', async (req, res) => {
 })
 
 // 404 handler
-app.use('*', (req, res) => {
+app.use('*', (req: Request, res: Response) => {
   res.status(404).json({
     success: false,
     message: 'Route not found'
@@ -225,7 +227,7 @@ app.use('*', (req, res) => {
 })
 
 // Error handler
-app.use((error, req, res, next) => {
+app.use((error: Error, req: Request, res: Response, next: NextFunction) => {
   console.error('Server error:', error)
   res.status(500).json({
     success: false,
@@ -241,4 +243,4 @@ app.listen(PORT, () => {
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`)
 })
 
-module.exports = app
+export default app
