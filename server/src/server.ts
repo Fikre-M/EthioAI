@@ -1,52 +1,59 @@
-import express, { Request, Response, NextFunction } from 'express'
-import cors from 'cors'
-import helmet from 'helmet'
-import compression from 'compression'
-import cookieParser from 'cookie-parser'
-import rateLimit from 'express-rate-limit'
-import dotenv from 'dotenv'
+import express, { Request, Response, NextFunction } from 'express';
+import cors from 'cors';
+import helmet from 'helmet';
+import compression from 'compression';
+import cookieParser from 'cookie-parser';
+import rateLimit from 'express-rate-limit';
+import dotenv from 'dotenv';
+import { PrismaClient } from '@prisma/client';
+import authRoutes from './modules/auth/auth.routes';
+import { errorHandler } from './middlewares/error.middleware';
 
-dotenv.config()
+dotenv.config();
 
-const app = express()
-const PORT = process.env.PORT || 5000
+// Initialize Prisma Client
+const prisma = new PrismaClient();
+
+const app = express();
+const PORT = process.env.PORT || 5000;
 
 // Security middleware
-app.use(helmet())
-app.use(compression())
+app.use(helmet());
+app.use(compression());
 
 // Rate limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // limit each IP to 100 requests per windowMs
   message: 'Too many requests from this IP, please try again later.',
-})
-app.use('/api/', limiter)
+});
+app.use('/api/', limiter);
 
 // CORS configuration
 app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3001',
+  origin: process.env.CLIENT_URL?.split(',') || 'http://localhost:3000',
   credentials: true,
-}))
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+}));
 
 // Body parsing middleware
-app.use(express.json({ limit: '10mb' }))
-app.use(express.urlencoded({ extended: true, limit: '10mb' }))
-app.use(cookieParser())
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(cookieParser());
 
 // Health check endpoint
 app.get('/health', (req: Request, res: Response) => {
   res.status(200).json({ 
     status: 'OK', 
     message: 'EthioAI Tourism Server is running',
-    timestamp: new Date().toISOString()
-  })
-})
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development',
+  });
+});
 
-// Mock authentication endpoints for development
-app.post('/api/auth/login', async (req: Request, res: Response) => {
-  try {
-    const { email, password } = req.body
+// API Routes
+app.use('/api/auth', authRoutes);
 
     // Mock validation
     if (!email || !password) {
