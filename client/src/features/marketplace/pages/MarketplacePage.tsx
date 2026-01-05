@@ -1,65 +1,70 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { Button } from '@components/common/Button/Button'
-import { ProductCard, ProductFilters } from '../components'
-import {
-  FaSearch, FaFilter, FaSort, FaTh, FaList, FaHeart,
-  FaShoppingCart, FaStar, FaMapMarkerAlt, FaTag, FaFire,
-  FaGift, FaShieldAlt, FaTruck, FaArrowUp, FaArrowDown,
-  FaSpinner, FaFlag
-} from 'react-icons/fa'
+import React, { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { Button } from "@/components/ui/Button";
+import { Badge } from "@/components/ui/Badge";
+import { Input } from "@/components/ui/Input";
+import ProductCard from "../components/ProductCard";
+import ProductFilters from "../components/ProductFilters";
 
-export interface Product {
-  id: string
-  name: string
-  description: string
-  price: number
-  originalPrice?: number
-  discount?: number
-  rating: number
-  reviewCount: number
-  images: string[]
-  category: string
-  subcategory: string
-  vendor: {
-    id: string
-    name: string
-    rating: number
-    verified: boolean
-    location: string
-  }
-  features: string[]
-  tags: string[]
-  availability: 'in-stock' | 'limited' | 'out-of-stock'
-  shipping: {
-    free: boolean
-    estimatedDays: number
-    cost?: number
-  }
-  isWishlisted: boolean
-  isFeatured: boolean
-  isNew: boolean
-  createdAt: string
-  madeInEthiopia: boolean
-  popularity: number
-}
+type SortOption =
+  | "popularity"
+  | "price-asc"
+  | "price-desc"
+  | "rating"
+  | "newest"
+  | "relevance";
 
 interface FilterOptions {
-  categories: string[]
-  priceRange: [number, number]
-  rating: number
-  availability: string[]
-  shipping: string[]
-  vendors: string[]
-  features: string[]
-  madeInEthiopia: boolean
+  categories: string[];
+  priceRange: [number, number];
+  rating: number;
+  availability: ("in-stock" | "limited" | "out-of-stock")[];
+  shipping: string[];
+  vendors: string[];
+  features: string[];
+  madeInEthiopia: boolean;
+}
+
+export interface Product {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  originalPrice?: number;
+  discount?: number;
+  rating: number;
+  reviewCount: number;
+  images: string[];
+  category: string;
+  subcategory: string;
+  vendor: {
+    id: string;
+    name: string;
+    rating: number;
+    verified: boolean;
+    location: string;
+  };
+  features: string[];
+  tags: string[];
+  availability: "in-stock" | "limited" | "out-of-stock";
+  shipping: {
+    free: boolean;
+    estimatedDays: number;
+    cost?: number;
+  };
+  isWishlisted: boolean;
+  isFeatured: boolean;
+  isNew: boolean;
+  createdAt: string;
+  madeInEthiopia: boolean;
+  popularity: number;
 }
 
 const MarketplacePage: React.FC = () => {
-  const navigate = useNavigate()
-  const [products, setProducts] = useState<Product[]>([])
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([])
-  const [searchQuery, setSearchQuery] = useState('')
+  const navigate = useNavigate();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [filters, setFilters] = useState<FilterOptions>({
     categories: [],
     priceRange: [0, 1000],
@@ -68,626 +73,606 @@ const MarketplacePage: React.FC = () => {
     shipping: [],
     vendors: [],
     features: [],
-    madeInEthiopia: false
-  })
-  const [sortBy, setSortBy] = useState<'relevance' | 'price-low' | 'price-high' | 'rating' | 'newest' | 'popularity'>('relevance')
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-  const [showFilters, setShowFilters] = useState(false)
-  const [isLoading, setIsLoading] = useState(true)
-  const [isLoadingMore, setIsLoadingMore] = useState(false)
-  const [hasMore, setHasMore] = useState(true)
-  const [page, setPage] = useState(1)
-  const [itemsPerPage] = useState(12)
-  const observerRef = useRef<IntersectionObserver | null>(null)
-  const lastProductElementRef = useCallback((node: HTMLDivElement) => {
-    if (isLoadingMore) return
-    if (observerRef.current) observerRef.current.disconnect()
-    observerRef.current = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting && hasMore) {
-        loadMoreProducts()
-      }
-    })
-    if (node) observerRef.current.observe(node)
-  }, [isLoadingMore, hasMore])
+    madeInEthiopia: false,
+  });
+  const [sortBy, setSortBy] = useState<SortOption>("popularity");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   // Mock product data
   const mockProducts: Product[] = [
     {
-      id: 'prod-001',
-      name: 'Ethiopian Coffee Experience Set',
-      description: 'Premium Ethiopian coffee beans with traditional brewing equipment. Includes ceremonial cups and incense.',
+      id: "prod-001",
+      name: "Ethiopian Coffee Experience Set",
+      description:
+        "Premium Ethiopian coffee beans with traditional brewing equipment. Includes ceremonial cups and incense.",
       price: 89.99,
       originalPrice: 119.99,
       discount: 25,
       rating: 4.8,
       reviewCount: 156,
       images: [
-        '/products/coffee-set-1.jpg',
-        '/products/coffee-set-2.jpg',
-        '/products/coffee-set-3.jpg'
+        "/products/coffee-set-1.jpg",
+        "/products/coffee-set-2.jpg",
+        "/products/coffee-set-3.jpg",
       ],
-      category: 'Food & Beverages',
-      subcategory: 'Coffee',
+      category: "Food & Beverages",
+      subcategory: "Coffee",
       vendor: {
-        id: 'vendor-001',
-        name: 'Addis Coffee Roasters',
+        id: "vendor-001",
+        name: "Addis Coffee Roasters",
         rating: 4.9,
         verified: true,
-        location: 'Addis Ababa, Ethiopia'
+        location: "Addis Ababa, Ethiopia",
       },
-      features: ['Organic', 'Fair Trade', 'Single Origin', 'Traditional Roast'],
-      tags: ['coffee', 'ethiopian', 'traditional', 'gift-set'],
-      availability: 'in-stock',
+      features: ["Organic", "Fair Trade", "Single Origin", "Traditional Roast"],
+      tags: ["coffee", "ethiopian", "traditional", "gift-set"],
+      availability: "in-stock",
       shipping: {
         free: true,
-        estimatedDays: 3
+        estimatedDays: 3,
       },
       isWishlisted: false,
       isFeatured: true,
       isNew: false,
-      createdAt: '2024-01-15',
+      createdAt: "2024-01-15",
       madeInEthiopia: true,
-      popularity: 95
+      popularity: 95,
     },
     {
-      id: 'prod-002',
-      name: 'Handwoven Ethiopian Scarf',
-      description: 'Beautiful traditional Ethiopian scarf made from premium cotton. Perfect for cultural events or daily wear.',
-      price: 45.00,
+      id: "prod-002",
+      name: "Handwoven Ethiopian Scarf",
+      description:
+        "Beautiful traditional Ethiopian scarf made from premium cotton. Perfect for cultural events or daily wear.",
+      price: 45.0,
       rating: 4.6,
       reviewCount: 89,
-      images: [
-        '/products/scarf-1.jpg',
-        '/products/scarf-2.jpg'
-      ],
-      category: 'Fashion & Accessories',
-      subcategory: 'Scarves',
+      images: ["/products/scarf-1.jpg", "/products/scarf-2.jpg"],
+      category: "Fashion & Accessories",
+      subcategory: "Scarves",
       vendor: {
-        id: 'vendor-002',
-        name: 'Heritage Textiles',
+        id: "vendor-002",
+        name: "Heritage Textiles",
         rating: 4.7,
         verified: true,
-        location: 'Bahir Dar, Ethiopia'
+        location: "Bahir Dar, Ethiopia",
       },
-      features: ['Handmade', '100% Cotton', 'Traditional Design', 'Machine Washable'],
-      tags: ['fashion', 'traditional', 'handmade', 'cotton'],
-      availability: 'in-stock',
+      features: [
+        "Handmade",
+        "100% Cotton",
+        "Traditional Design",
+        "Machine Washable",
+      ],
+      tags: ["fashion", "traditional", "handmade", "cotton"],
+      availability: "in-stock",
       shipping: {
         free: false,
         estimatedDays: 5,
-        cost: 8.99
+        cost: 8.99,
       },
       isWishlisted: true,
       isFeatured: false,
       isNew: true,
-      createdAt: '2024-01-20',
+      createdAt: "2024-01-20",
       madeInEthiopia: true,
-      popularity: 78
+      popularity: 78,
     },
     {
-      id: 'prod-003',
-      name: 'Lalibela Rock Church Model',
-      description: 'Detailed miniature replica of the famous Lalibela rock churches. Perfect for collectors and cultural enthusiasts.',
-      price: 125.00,
+      id: "prod-003",
+      name: "Lalibela Rock Church Model",
+      description:
+        "Detailed miniature replica of the famous Lalibela rock churches. Perfect for collectors and cultural enthusiasts.",
+      price: 125.0,
       rating: 4.9,
       reviewCount: 34,
       images: [
-        '/products/church-model-1.jpg',
-        '/products/church-model-2.jpg',
-        '/products/church-model-3.jpg'
+        "/products/church-model-1.jpg",
+        "/products/church-model-2.jpg",
+        "/products/church-model-3.jpg",
       ],
-      category: 'Art & Collectibles',
-      subcategory: 'Sculptures',
+      category: "Art & Collectibles",
+      subcategory: "Sculptures",
       vendor: {
-        id: 'vendor-003',
-        name: 'Cultural Artifacts Co.',
+        id: "vendor-003",
+        name: "Cultural Artifacts Co.",
         rating: 4.8,
         verified: true,
-        location: 'Lalibela, Ethiopia'
+        location: "Lalibela, Ethiopia",
       },
-      features: ['Handcrafted', 'Authentic Design', 'Limited Edition', 'Certificate of Authenticity'],
-      tags: ['art', 'collectible', 'religious', 'handcrafted'],
-      availability: 'limited',
+      features: [
+        "Handcrafted",
+        "Authentic Design",
+        "Limited Edition",
+        "Certificate of Authenticity",
+      ],
+      tags: ["art", "collectible", "religious", "handcrafted"],
+      availability: "limited",
       shipping: {
         free: true,
-        estimatedDays: 7
+        estimatedDays: 7,
       },
       isWishlisted: false,
       isFeatured: true,
       isNew: false,
-      createdAt: '2024-01-10',
+      createdAt: "2024-01-10",
       madeInEthiopia: true,
-      popularity: 89
+      popularity: 89,
     },
     {
-      id: 'prod-004',
-      name: 'Ethiopian Spice Collection',
-      description: 'Complete collection of authentic Ethiopian spices including berbere, mitmita, and korarima. Perfect for cooking enthusiasts.',
+      id: "prod-004",
+      name: "Ethiopian Spice Collection",
+      description:
+        "Complete collection of authentic Ethiopian spices including berbere, mitmita, and korarima. Perfect for cooking enthusiasts.",
       price: 34.99,
       originalPrice: 49.99,
       discount: 30,
       rating: 4.7,
       reviewCount: 203,
-      images: [
-        '/products/spices-1.jpg',
-        '/products/spices-2.jpg'
-      ],
-      category: 'Food & Beverages',
-      subcategory: 'Spices',
+      images: ["/products/spices-1.jpg", "/products/spices-2.jpg"],
+      category: "Food & Beverages",
+      subcategory: "Spices",
       vendor: {
-        id: 'vendor-004',
-        name: 'Spice Route Ethiopia',
+        id: "vendor-004",
+        name: "Spice Route Ethiopia",
         rating: 4.6,
         verified: true,
-        location: 'Dire Dawa, Ethiopia'
+        location: "Dire Dawa, Ethiopia",
       },
-      features: ['Organic', 'Freshly Ground', 'Traditional Blend', 'Recipe Book Included'],
-      tags: ['spices', 'cooking', 'traditional', 'organic'],
-      availability: 'in-stock',
+      features: [
+        "Organic",
+        "Freshly Ground",
+        "Traditional Blend",
+        "Recipe Book Included",
+      ],
+      tags: ["spices", "cooking", "traditional", "organic"],
+      availability: "in-stock",
       shipping: {
         free: false,
         estimatedDays: 4,
-        cost: 5.99
+        cost: 5.99,
       },
       isWishlisted: false,
       isFeatured: false,
       isNew: true,
-      createdAt: '2024-01-18',
+      createdAt: "2024-01-18",
       madeInEthiopia: true,
-      popularity: 82
+      popularity: 82,
     },
     {
-      id: 'prod-005',
-      name: 'Traditional Ethiopian Jewelry Set',
-      description: 'Elegant silver jewelry set featuring traditional Ethiopian designs. Includes necklace, earrings, and bracelet.',
-      price: 189.00,
+      id: "prod-005",
+      name: "Traditional Ethiopian Jewelry Set",
+      description:
+        "Elegant silver jewelry set featuring traditional Ethiopian designs. Includes necklace, earrings, and bracelet.",
+      price: 189.0,
       rating: 4.5,
       reviewCount: 67,
       images: [
-        '/products/jewelry-1.jpg',
-        '/products/jewelry-2.jpg',
-        '/products/jewelry-3.jpg'
+        "/products/jewelry-1.jpg",
+        "/products/jewelry-2.jpg",
+        "/products/jewelry-3.jpg",
       ],
-      category: 'Fashion & Accessories',
-      subcategory: 'Jewelry',
+      category: "Fashion & Accessories",
+      subcategory: "Jewelry",
       vendor: {
-        id: 'vendor-005',
-        name: 'Silver Traditions',
+        id: "vendor-005",
+        name: "Silver Traditions",
         rating: 4.4,
         verified: true,
-        location: 'Axum, Ethiopia'
+        location: "Axum, Ethiopia",
       },
-      features: ['Sterling Silver', 'Handcrafted', 'Traditional Design', 'Gift Box Included'],
-      tags: ['jewelry', 'silver', 'traditional', 'handmade'],
-      availability: 'in-stock',
+      features: [
+        "Sterling Silver",
+        "Handcrafted",
+        "Traditional Design",
+        "Gift Box Included",
+      ],
+      tags: ["jewelry", "silver", "traditional", "handmade"],
+      availability: "in-stock",
       shipping: {
         free: true,
-        estimatedDays: 6
+        estimatedDays: 6,
       },
       isWishlisted: true,
       isFeatured: false,
       isNew: false,
-      createdAt: '2024-01-12',
+      createdAt: "2024-01-12",
       madeInEthiopia: true,
-      popularity: 71
+      popularity: 71,
     },
     {
-      id: 'prod-006',
-      name: 'Ethiopian Honey Collection',
-      description: 'Pure Ethiopian honey from different regions. Includes white honey, forest honey, and eucalyptus honey.',
-      price: 67.50,
+      id: "prod-006",
+      name: "Ethiopian Honey Collection",
+      description:
+        "Pure Ethiopian honey from different regions. Includes white honey, forest honey, and eucalyptus honey.",
+      price: 67.5,
       rating: 4.8,
       reviewCount: 124,
-      images: [
-        '/products/honey-1.jpg',
-        '/products/honey-2.jpg'
-      ],
-      category: 'Food & Beverages',
-      subcategory: 'Honey',
+      images: ["/products/honey-1.jpg", "/products/honey-2.jpg"],
+      category: "Food & Beverages",
+      subcategory: "Honey",
       vendor: {
-        id: 'vendor-006',
-        name: 'Golden Hive Collective',
+        id: "vendor-006",
+        name: "Golden Hive Collective",
         rating: 4.9,
         verified: true,
-        location: 'Tigray, Ethiopia'
+        location: "Tigray, Ethiopia",
       },
-      features: ['Raw Honey', 'No Additives', 'Multiple Varieties', 'Sustainable Sourcing'],
-      tags: ['honey', 'natural', 'organic', 'healthy'],
-      availability: 'in-stock',
+      features: [
+        "Raw Honey",
+        "No Additives",
+        "Multiple Varieties",
+        "Sustainable Sourcing",
+      ],
+      tags: ["honey", "natural", "organic", "healthy"],
+      availability: "in-stock",
       shipping: {
         free: false,
         estimatedDays: 5,
-        cost: 12.99
+        cost: 12.99,
       },
       isWishlisted: false,
       isFeatured: true,
       isNew: false,
-      createdAt: '2024-01-08',
+      createdAt: "2024-01-08",
       madeInEthiopia: true,
-      popularity: 93
-    }
-  ]
+      popularity: 93,
+    },
+  ];
 
-  // Generate additional mock products for infinite scroll
-  const generateMoreProducts = (startId: number, count: number): Product[] => {
-    const additionalProducts: Product[] = []
-    const categories = ['Food & Beverages', 'Fashion & Accessories', 'Art & Collectibles', 'Home & Garden', 'Books & Media']
-    const vendors = ['Addis Coffee Roasters', 'Heritage Textiles', 'Cultural Artifacts Co.', 'Spice Route Ethiopia', 'Silver Traditions', 'Golden Hive Collective']
-    
-    for (let i = 0; i < count; i++) {
-      const id = startId + i
-      const category = categories[Math.floor(Math.random() * categories.length)]
-      const vendor = vendors[Math.floor(Math.random() * vendors.length)]
-      
-      additionalProducts.push({
-        id: `prod-${String(id).padStart(3, '0')}`,
-        name: `Ethiopian Product ${id}`,
-        description: `Authentic Ethiopian product featuring traditional craftsmanship and cultural significance. Product ${id} represents the rich heritage of Ethiopia.`,
-        price: Math.floor(Math.random() * 200) + 20,
-        originalPrice: Math.random() > 0.7 ? Math.floor(Math.random() * 250) + 50 : undefined,
-        discount: Math.random() > 0.7 ? Math.floor(Math.random() * 30) + 10 : undefined,
-        rating: Math.floor(Math.random() * 20) / 10 + 3.5, // 3.5 to 5.0
-        reviewCount: Math.floor(Math.random() * 200) + 10,
-        images: [
-          `/products/product-${id}-1.jpg`,
-          `/products/product-${id}-2.jpg`
-        ],
-        category,
-        subcategory: 'Traditional',
-        vendor: {
-          id: `vendor-${Math.floor(Math.random() * 6) + 1}`,
-          name: vendor,
-          rating: Math.floor(Math.random() * 10) / 10 + 4.0,
-          verified: Math.random() > 0.2,
-          location: 'Ethiopia'
-        },
-        features: ['Handmade', 'Traditional', 'Authentic'].slice(0, Math.floor(Math.random() * 3) + 1),
-        tags: ['ethiopian', 'traditional', 'handmade'],
-        availability: Math.random() > 0.1 ? 'in-stock' : Math.random() > 0.5 ? 'limited' : 'out-of-stock',
-        shipping: {
-          free: Math.random() > 0.3,
-          estimatedDays: Math.floor(Math.random() * 7) + 3,
-          cost: Math.random() > 0.3 ? undefined : Math.floor(Math.random() * 15) + 5
-        },
-        isWishlisted: Math.random() > 0.8,
-        isFeatured: Math.random() > 0.8,
-        isNew: Math.random() > 0.7,
-        createdAt: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        madeInEthiopia: Math.random() > 0.1, // 90% are made in Ethiopia
-        popularity: Math.floor(Math.random() * 100) + 1
-      })
-    }
-    
-    return additionalProducts
-  }
-
+  // Initialize products with mock data
   useEffect(() => {
-    // Simulate initial loading
-    setTimeout(() => {
-      const allProducts = [...mockProducts, ...generateMoreProducts(7, 50)]
-      setProducts(allProducts)
-      setFilteredProducts(allProducts.slice(0, itemsPerPage))
-      setIsLoading(false)
-    }, 1000)
-  }, [])
+    setProducts(mockProducts);
+    setFilteredProducts(mockProducts);
+    setIsLoading(false);
+  }, []);
 
-  const loadMoreProducts = useCallback(() => {
-    if (isLoadingMore || !hasMore) return
-    
-    setIsLoadingMore(true)
-    
-    // Simulate API call delay
-    setTimeout(() => {
-      const startIndex = page * itemsPerPage
-      const endIndex = startIndex + itemsPerPage
-      const moreProducts = products.slice(startIndex, endIndex)
-      
-      if (moreProducts.length === 0) {
-        setHasMore(false)
-      } else {
-        setFilteredProducts(prev => [...prev, ...moreProducts])
-        setPage(prev => prev + 1)
-      }
-      
-      setIsLoadingMore(false)
-    }, 1000)
-  }, [page, products, itemsPerPage, isLoadingMore, hasMore])
+  const applyFiltersAndSort = useCallback(() => {
+    setIsLoading(true);
+    let result = [...products];
 
-  useEffect(() => {
-    applyFiltersAndSort()
-  }, [products, filters, sortBy, searchQuery])
-
-  const applyFiltersAndSort = () => {
-    let filtered = [...products]
-
-    // Apply search filter
+    // Apply search
     if (searchQuery) {
-      filtered = filtered.filter(product =>
-        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()))
-      )
+      const query = searchQuery.toLowerCase();
+      result = result.filter(
+        (product) =>
+          product.name.toLowerCase().includes(query) ||
+          product.description.toLowerCase().includes(query) ||
+          product.tags.some((tag) => tag.toLowerCase().includes(query))
+      );
     }
 
     // Apply category filter
     if (filters.categories.length > 0) {
-      filtered = filtered.filter(product =>
-        filters.categories.includes(product.category)
-      )
+      result = result.filter(
+        (product) =>
+          filters.categories.includes(product.category) ||
+          filters.categories.includes(product.subcategory)
+      );
     }
 
     // Apply price range filter
-    filtered = filtered.filter(product =>
-      product.price >= filters.priceRange[0] && product.price <= filters.priceRange[1]
-    )
+    result = result.filter(
+      (product) =>
+        product.price >= filters.priceRange[0] &&
+        product.price <= filters.priceRange[1]
+    );
 
     // Apply rating filter
     if (filters.rating > 0) {
-      filtered = filtered.filter(product => product.rating >= filters.rating)
+      result = result.filter((product) => product.rating >= filters.rating);
     }
 
     // Apply availability filter
     if (filters.availability.length > 0) {
-      filtered = filtered.filter(product =>
+      result = result.filter((product) =>
         filters.availability.includes(product.availability)
-      )
+      );
     }
 
     // Apply shipping filter
-    if (filters.shipping.includes('free')) {
-      filtered = filtered.filter(product => product.shipping.free)
+    if (filters.shipping.includes("free")) {
+      result = result.filter((product) => product.shipping.free);
     }
 
-    // Apply Made in Ethiopia filter
+    // Apply made in Ethiopia filter
     if (filters.madeInEthiopia) {
-      filtered = filtered.filter(product => product.madeInEthiopia)
+      result = result.filter((product) => product.madeInEthiopia);
+    }
+
+    // Apply vendor filter (if implemented)
+    if (filters.vendors.length > 0) {
+      result = result.filter((product) =>
+        filters.vendors.includes(product.vendor.id)
+      );
+    }
+
+    // Apply features filter (if implemented)
+    if (filters.features.length > 0) {
+      result = result.filter((product) =>
+        filters.features.some((feature) => product.features.includes(feature))
+      );
     }
 
     // Apply sorting
-    switch (sortBy) {
-      case 'price-low':
-        filtered.sort((a, b) => a.price - b.price)
-        break
-      case 'price-high':
-        filtered.sort((a, b) => b.price - a.price)
-        break
-      case 'rating':
-        filtered.sort((a, b) => b.rating - a.rating)
-        break
-      case 'newest':
-        filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-        break
-      case 'popularity':
-        filtered.sort((a, b) => b.popularity - a.popularity)
-        break
-      default:
-        // Relevance - featured first, then by rating
-        filtered.sort((a, b) => {
-          if (a.isFeatured && !b.isFeatured) return -1
-          if (!a.isFeatured && b.isFeatured) return 1
-          return b.rating - a.rating
-        })
-    }
+    result.sort((a, b) => {
+      switch (sortBy) {
+        case "price-asc":
+          return a.price - b.price;
+        case "price-desc":
+          return b.price - a.price;
+        case "rating":
+          return b.rating - a.rating;
+        case "newest":
+          return (
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+          );
+        case "relevance":
+          // For relevance, we could combine multiple factors
+          return (b.popularity || 0) - (a.popularity || 0);
+        case "popularity":
+        default:
+          return (b.popularity || 0) - (a.popularity || 0);
+      }
+    });
 
-    // Reset infinite scroll when filters change
-    setFilteredProducts(filtered.slice(0, itemsPerPage))
-    setPage(1)
-    setHasMore(filtered.length > itemsPerPage)
-  }
+    setFilteredProducts(result);
+    setIsLoading(false);
+  }, [filters, products, searchQuery, sortBy]);
 
-  const handleFilterChange = (newFilters: FilterOptions) => {
-    setFilters(newFilters)
-  }
+  // Apply filters when dependencies change
+  useEffect(() => {
+    applyFiltersAndSort();
+  }, [applyFiltersAndSort]);
 
-  const handleWishlistToggle = (productId: string) => {
-    setProducts(products.map(product =>
-      product.id === productId
-        ? { ...product, isWishlisted: !product.isWishlisted }
-        : product
-    ))
-  }
+  const handleFilterChange = (newFilters: Partial<FilterOptions>) => {
+    setFilters((prev) => ({ ...prev, ...newFilters }));
+  };
 
-  const handleAddToCart = (productId: string) => {
-    // Add to cart logic
-    console.log('Added to cart:', productId)
-    // You could show a toast notification here
-  }
-
-  const handleProductClick = (productId: string) => {
-    navigate(`/marketplace/product/${productId}`)
-  }
-
-  const categories = Array.from(new Set(products.map(p => p.category)))
-  const vendors = Array.from(new Set(products.map(p => p.vendor.name)))
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading marketplace...</p>
-        </div>
-      </div>
-    )
-  }
+  // Reset all filters
+  const handleResetFilters = () => {
+    setFilters({
+      categories: [],
+      priceRange: [0, 1000],
+      rating: 0,
+      availability: [],
+      shipping: [],
+      vendors: [],
+      features: [],
+      madeInEthiopia: false,
+    });
+    setSearchQuery("");
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-8">
-        {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2 sm:mb-4">Ethiopian Marketplace</h1>
-          <p className="text-base sm:text-lg lg:text-xl text-gray-600">Discover authentic Ethiopian products and cultural treasures</p>
-        </div>
+    <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 max-w-full overflow-hidden">
+      {/* Header */}
+      <div className="mb-6 sm:mb-8 min-w-0">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gradient-ethiopian mb-2 line-clamp-2">
+          Ethiopian Marketplace
+        </h1>
+        <p className="text-sm sm:text-base text-muted-foreground line-clamp-2">
+          Discover unique products from local Ethiopian artisans and businesses
+        </p>
+      </div>
 
-        {/* Search and Controls */}
-        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg p-4 sm:p-6 mb-6 sm:mb-8">
-          <div className="flex flex-col gap-4">
-            {/* Search */}
-            <div className="relative">
-              <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-              <input
-                type="text"
-                placeholder="Search products, categories, or vendors..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+      {/* Search & Sort Bar */}
+      <div className="mb-4 sm:mb-6 flex flex-col gap-3 sm:gap-4 min-w-0 overflow-hidden">
+        {/* Search */}
+        <div className="w-full min-w-0">
+          <div className="relative">
+            <Input
+              type="text"
+              placeholder="Search products..."
+              className="pl-10 w-full"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <svg
+              className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-500"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
               />
-            </div>
-
-            {/* Controls */}
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
-              <div className="flex items-center gap-3 flex-1">
-                <Button
-                  onClick={() => setShowFilters(!showFilters)}
-                  variant="outline"
-                  className="flex items-center text-sm"
-                  size="sm"
-                >
-                  <FaFilter className="mr-2" />
-                  Filters
-                </Button>
-
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as any)}
-                  className="flex-1 sm:flex-none px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                >
-                  <option value="relevance">Sort by Relevance</option>
-                  <option value="popularity">Most Popular</option>
-                  <option value="price-low">Price: Low to High</option>
-                  <option value="price-high">Price: High to Low</option>
-                  <option value="rating">Highest Rated</option>
-                  <option value="newest">Newest First</option>
-                </select>
-              </div>
-
-              <div className="flex border border-gray-300 rounded-lg overflow-hidden self-start">
-                <button
-                  onClick={() => setViewMode('grid')}
-                  className={`p-2 ${viewMode === 'grid' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600'}`}
-                >
-                  <FaTh />
-                </button>
-                <button
-                  onClick={() => setViewMode('list')}
-                  className={`p-2 ${viewMode === 'list' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600'}`}
-                >
-                  <FaList />
-                </button>
-              </div>
-            </div>
+            </svg>
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
-          {/* Filters Sidebar */}
-          {showFilters && (
-            <div className="lg:w-80 lg:flex-shrink-0 order-2 lg:order-1">
-              <ProductFilters
-                filters={filters}
-                onFiltersChange={handleFilterChange}
-                categories={categories}
-                vendors={vendors}
-                priceRange={[0, Math.max(...products.map(p => p.price))]}
+        {/* Filter & Sort */}
+        <div className="flex flex-wrap gap-2 sm:gap-3 items-center justify-between">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsFilterOpen(!isFilterOpen)}
+            className="flex items-center gap-2"
+          >
+            <svg
+              className="h-4 w-4"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
               />
+            </svg>
+            Filters
+            {Object.values(filters).some((filter) =>
+              Array.isArray(filter) ? filter.length > 0 : Boolean(filter)
+            ) && (
+              <Badge variant="secondary" className="ml-1">
+                {
+                  Object.values(filters).filter((filter) =>
+                    Array.isArray(filter) ? filter.length > 0 : Boolean(filter)
+                  ).length
+                }
+              </Badge>
+            )}
+          </Button>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant={viewMode === "grid" ? "secondary" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("grid")}
+              className="h-9 w-9 p-0"
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"
+                />
+              </svg>
+            </Button>
+            <Button
+              variant={viewMode === "list" ? "secondary" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className="h-9 w-9 p-0"
+            >
+              <svg
+                className="h-4 w-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </Button>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value as SortOption)}
+              className="text-sm rounded-md border border-input bg-background px-3 py-2 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 h-9"
+            >
+              <option value="popularity">Most Popular</option>
+              <option value="price-asc">Price: Low to High</option>
+              <option value="price-desc">Price: High to Low</option>
+              <option value="rating">Highest Rated</option>
+              <option value="newest">Newest First</option>
+              <option value="relevance">Relevance</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Results Count */}
+      <div className="mb-4 text-xs sm:text-sm text-muted-foreground">
+        Showing {filteredProducts.length} of {products.length} products
+      </div>
+
+      {/* Main Content */}
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 min-w-0 overflow-hidden">
+        {/* Filters Sidebar */}
+        <div
+          className={`lg:col-span-1 order-2 lg:order-1 min-w-0 transition-all duration-300 ${
+            isFilterOpen ? "block" : "hidden lg:block"
+          }`}
+        >
+          <ProductFilters
+            filters={filters}
+            onFiltersChange={handleFilterChange}
+            onReset={handleResetFilters}
+          />
+        </div>
+
+        {/* Products Grid */}
+        <div className="lg:col-span-3 order-1 lg:order-2 min-w-0 overflow-hidden">
+          {isLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
+              {[...Array(6)].map((_, i) => (
+                <div
+                  key={i}
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden h-full animate-pulse"
+                >
+                  <div className="aspect-square bg-gray-200 dark:bg-gray-700" />
+                  <div className="p-4 space-y-3">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4" />
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/2" />
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-1/4" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : filteredProducts.length > 0 ? (
+            <div
+              className={`grid ${
+                viewMode === "grid"
+                  ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3"
+                  : "grid-cols-1"
+              } gap-4 sm:gap-6`}
+            >
+              {filteredProducts.map((product) => (
+                <div key={product.id} className="h-full">
+                  <ProductCard
+                    product={product}
+                    viewMode={viewMode}
+                    onWishlistToggle={() => {
+                      setProducts(
+                        products.map((p) =>
+                          p.id === product.id
+                            ? { ...p, isWishlisted: !p.isWishlisted }
+                            : p
+                        )
+                      );
+                    }}
+                    onAddToCart={() => {
+                      // Handle add to cart
+                      console.log("Added to cart:", product.id);
+                    }}
+                    onClick={() => navigate(`/marketplace/${product.id}`)}
+                  />
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 text-center">
+              <svg
+                className="w-24 h-24 text-gray-300 dark:text-gray-700 mb-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+                No products found
+              </h3>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Try adjusting your filters or search criteria
+              </p>
+              <Button onClick={handleResetFilters}>Reset Filters</Button>
             </div>
           )}
-
-          {/* Products Grid/List */}
-          <div className="flex-1 order-1 lg:order-2">
-            {/* Results Info */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-              <div className="text-sm sm:text-base text-gray-600">
-                Showing {filteredProducts.length} products
-                {!hasMore && ` (all results)`}
-              </div>
-              
-              {/* Featured Tags */}
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="flex items-center text-xs sm:text-sm bg-red-100 text-red-800 px-2 sm:px-3 py-1 rounded-full whitespace-nowrap">
-                  <FaFire className="mr-1" />
-                  Featured
-                </span>
-                <span className="flex items-center text-xs sm:text-sm bg-green-100 text-green-800 px-2 sm:px-3 py-1 rounded-full whitespace-nowrap">
-                  <FaGift className="mr-1" />
-                  New Arrivals
-                </span>
-                <span className="flex items-center text-xs sm:text-sm bg-blue-100 text-blue-800 px-2 sm:px-3 py-1 rounded-full whitespace-nowrap">
-                  <FaFlag className="mr-1" />
-                  Made in Ethiopia
-                </span>
-              </div>
-            </div>
-
-            {/* Products */}
-            {filteredProducts.length > 0 ? (
-              <>
-                <div className={`grid gap-4 sm:gap-6 ${
-                  viewMode === 'grid' 
-                    ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4' 
-                    : 'grid-cols-1'
-                }`}>
-                  {filteredProducts.map((product, index) => (
-                    <div
-                      key={product.id}
-                      ref={index === filteredProducts.length - 1 ? lastProductElementRef : null}
-                    >
-                      <ProductCard
-                        product={product}
-                        viewMode={viewMode}
-                        onWishlistToggle={handleWishlistToggle}
-                        onAddToCart={handleAddToCart}
-                        onClick={handleProductClick}
-                      />
-                    </div>
-                  ))}
-                </div>
-
-                {/* Loading More Indicator */}
-                {isLoadingMore && (
-                  <div className="flex items-center justify-center py-8">
-                    <FaSpinner className="animate-spin text-blue-600 mr-2" />
-                    <span className="text-gray-600">Loading more products...</span>
-                  </div>
-                )}
-
-                {/* End of Results */}
-                {!hasMore && filteredProducts.length > itemsPerPage && (
-                  <div className="text-center py-8">
-                    <div className="text-gray-500">
-                      You've reached the end of the results
-                    </div>
-                  </div>
-                )}
-              </>
-            ) : (
-              <div className="text-center py-12">
-                <div className="text-6xl mb-4">🔍</div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No products found</h3>
-                <p className="text-gray-600 mb-6">Try adjusting your search or filters</p>
-                <Button onClick={() => {
-                  setSearchQuery('')
-                  setFilters({
-                    categories: [],
-                    priceRange: [0, 1000],
-                    rating: 0,
-                    availability: [],
-                    shipping: [],
-                    vendors: [],
-                    features: [],
-                    madeInEthiopia: false
-                  })
-                }}>
-                  Clear All Filters
-                </Button>
-              </div>
-            )}
-          </div>
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default MarketplacePage
+export default MarketplacePage;
