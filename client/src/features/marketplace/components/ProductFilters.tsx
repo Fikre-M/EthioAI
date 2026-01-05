@@ -1,4 +1,3 @@
-// src/features/marketplace/components/ProductFilters.tsx
 import React from "react";
 import { FilterOptions } from "../pages/MarketplacePage";
 

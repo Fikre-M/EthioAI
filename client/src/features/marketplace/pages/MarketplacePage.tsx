@@ -14,7 +14,7 @@ type SortOption =
   | "newest"
   | "relevance";
 
-interface FilterOptions {
+export interface FilterOptions {
   categories: string[];
   priceRange: [number, number];
   rating: number;
