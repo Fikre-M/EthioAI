@@ -2,6 +2,8 @@ import { Routes, Route } from 'react-router-dom'
 import { LoginPage, RegisterPage, ForgotPasswordPage, ProfilePage, EditProfilePage } from '@features/auth/pages'
 import { HomePage } from '@features/dashboard/pages'
 import { ChatPage } from '@features/chat/pages'
+import { ToursPage } from '@features/tours/pages/ToursPage'
+import { DestinationsPage } from '@features/destinations/pages/DestinationsPage'
 import { BookingPage, CartPage, CheckoutPage, MyBookingsPage } from '@features/booking/pages'
 import { PaymentPage, ConfirmationPage } from '@features/payment/pages'
 import { CultureHubPage, VirtualMuseumPage, ArticlePage, ArtifactDetailPage, ArticleEditorPage, CulturalCategoriesPage, LanguagePage, RecipesPage, RecipeDetailPage, CulturalLearningHub, CulturalCommunityHub, ContributePage, CulturalQuizPage } from '@features/cultural/pages'
@@ -107,12 +109,12 @@ export const AppRoutes = () => {
         {/* Public Routes - Accessible to Everyone */}
         <Route
           path={ROUTES.TOURS}
-          element={<PlaceholderPage title="Tours & Packages" icon="🗺️" />}
+          element={<ToursPage />}
         />
 
         <Route
           path={ROUTES.DESTINATIONS}
-          element={<PlaceholderPage title="Destinations" icon="🏔️" />}
+          element={<DestinationsPage />}
         />
 
         <Route
