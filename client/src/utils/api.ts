@@ -44,4 +44,21 @@ export const createPaymentIntent = async (
   }
 };
 
-// Add other API calls as needed
+// // Add other API calls as needed
+
+// import axios from "axios";
+
+// const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+
+// export const createPaymentIntent = async (amount: number, currency: string) => {
+//   try {
+//     const response = await axios.post(
+//       `${API_URL}/payments/create-payment-intent`,
+//       { amount, currency }
+//     );
+//     return response.data;
+//   } catch (error) {
+//     console.error("Error creating payment intent:", error);
+//     throw error;
+//   }
+// };
