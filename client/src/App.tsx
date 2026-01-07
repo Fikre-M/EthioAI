@@ -7,9 +7,16 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary'
 import { ToastContainer } from '@/components/ui/ToastContainer'
 import { LoadingState } from '@/components/ui/LoadingState'
 import './i18n'
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import PaymentForm from "./components/PaymentForm";
+import PaymentSuccess from "./pages/PaymentSuccess";
 
 function App() {
   return (
+    <Router>
+      <Routes>
+        <Route path=\"/payment\" element={<PaymentForm />} />
+        <Route path=\"/payment/success\" element={<PaymentSuccess />} /></Routes>
     <ErrorBoundary>
       <Provider store={store}>
         <BrowserRouter>
@@ -30,6 +37,8 @@ function App() {
         </BrowserRouter>
       </Provider>
     </ErrorBoundary>
+     </Routes>
+    </Router>
   )
 }
 

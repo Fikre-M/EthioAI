@@ -5,6 +5,10 @@ import { config } from 'dotenv';
 import { errorHandler } from './middlewares/error.middleware';
 import { notFoundHandler } from './middlewares/not-found.middleware';
 import { logger } from './utils/logger';
+// In your main server file (e.g., app.ts or index.ts)
+import paymentRoutes from './routes/payment.routes';
+
+
 
 // Load environment variables
 config();
@@ -13,6 +17,7 @@ config();
 export const app: Application = express();
 
 // Middleware
+app.use("/api/payments", paymentRoutes);
 app.use(helmet());
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:3000',
