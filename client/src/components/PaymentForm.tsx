@@ -1,4 +1,3 @@
-// client/src/components/PaymentForm.tsx
 import React, { useState } from "react";
 import { useStripe, useElements, CardElement } from "@stripe/react-stripe-js";
 import { createPaymentIntent } from "../utils/api";
