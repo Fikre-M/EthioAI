@@ -48,8 +48,8 @@ router.post("/register", async (req, res) => {
     // Generate JWT
     const token = jwt.sign(
       { userId: user.id, role: user.role },
-      process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
+      process.env.JWT_SECRET! as string,
+      { expiresIn: process.env.JWT_EXPIRES_IN as string }
     );
 
     // Return user data (excluding password)
@@ -107,8 +107,8 @@ router.post("/login", async (req, res) => {
     // Generate JWT
     const token = jwt.sign(
       { userId: user.id, role: user.role },
-      process.env.JWT_SECRET!,
-      { expiresIn: process.env.JWT_EXPIRES_IN }
+      process.env.JWT_SECRET! as string,
+      { expiresIn: process.env.JWT_EXPIRES_IN as string }
     );
 
     // Return user data (excluding password)
