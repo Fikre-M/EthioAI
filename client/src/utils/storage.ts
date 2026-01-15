@@ -17,6 +17,25 @@ export const removeToken = (): void => {
   localStorage.removeItem(STORAGE_KEYS.TOKEN)
 }
 
+// Refresh token management
+export const setRefreshToken = (token: string): void => {
+  localStorage.setItem(STORAGE_KEYS.REFRESH_TOKEN, token)
+}
+
+export const getRefreshToken = (): string | null => {
+  return localStorage.getItem(STORAGE_KEYS.REFRESH_TOKEN)
+}
+
+export const removeRefreshToken = (): void => {
+  localStorage.removeItem(STORAGE_KEYS.REFRESH_TOKEN)
+}
+
+// Token pair management
+export const setTokens = (accessToken: string, refreshToken: string): void => {
+  setToken(accessToken)
+  setRefreshToken(refreshToken)
+}
+
 // User management
 export const setUser = (user: unknown): void => {
   localStorage.setItem(STORAGE_KEYS.USER, JSON.stringify(user))
@@ -43,10 +62,18 @@ export const getLanguage = (): string | null => {
 // Clear all auth data
 export const clearAuth = (): void => {
   removeToken()
+  removeRefreshToken()
   removeUser()
 }
 
 // Clear all storage
 export const clearAllStorage = (): void => {
   localStorage.clear()
+}
+
+// Check if user is authenticated
+export const isAuthenticated = (): boolean => {
+  const token = getToken()
+  const user = getUser()
+  return !!(token && user)
 }

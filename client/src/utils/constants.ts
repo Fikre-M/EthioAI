@@ -42,6 +42,7 @@ export const ROUTES = {
 // Storage Keys
 export const STORAGE_KEYS = {
   TOKEN: TOKEN_KEY,
+  REFRESH_TOKEN: 'refresh_token',
   USER: 'auth_user',
   LANGUAGE: 'app_language',
   CART: 'booking_cart',

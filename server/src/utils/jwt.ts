@@ -1,39 +1,99 @@
 import jwt from 'jsonwebtoken';
 import { config } from '../config';
+import { UserRole } from '@prisma/client';
 
-export interface TokenPayload {
+export interface JwtPayload {
   userId: string;
-  email: string;
-  role: string;
+  role: UserRole;
+  type: 'access' | 'refresh';
+  iat?: number;
+  exp?: number;
 }
 
-export const signAccessToken = (payload: TokenPayload): string => {
+/**
+ * Generate access token
+ */
+export const generateAccessToken = (userId: string, role: UserRole): string => {
+  const payload: Omit<JwtPayload, 'iat' | 'exp'> = {
+    userId,
+    role,
+    type: 'access',
+  };
+
   return jwt.sign(payload, config.jwt.accessSecret, {
     expiresIn: config.jwt.accessExpiresIn,
   });
 };
 
-export const signRefreshToken = (payload: { userId: string }): string => {
+/**
+ * Generate refresh token
+ */
+export const generateRefreshToken = (userId: string, role: UserRole): string => {
+  const payload: Omit<JwtPayload, 'iat' | 'exp'> = {
+    userId,
+    role,
+    type: 'refresh',
+  };
+
   return jwt.sign(payload, config.jwt.refreshSecret, {
     expiresIn: config.jwt.refreshExpiresIn,
   });
 };
 
-export const verifyToken = <T>(
-  token: string,
-  secret: string
-): T | null => {
+/**
+ * Verify access token
+ */
+export const verifyAccessToken = (token: string): JwtPayload => {
+  return jwt.verify(token, config.jwt.accessSecret) as JwtPayload;
+};
+
+/**
+ * Verify refresh token
+ */
+export const verifyRefreshToken = (token: string): JwtPayload => {
+  return jwt.verify(token, config.jwt.refreshSecret) as JwtPayload;
+};
+
+/**
+ * Generate token pair (access + refresh)
+ */
+export const generateTokenPair = (userId: string, role: UserRole) => {
+  return {
+    accessToken: generateAccessToken(userId, role),
+    refreshToken: generateRefreshToken(userId, role),
+  };
+};
+
+/**
+ * Extract token from Authorization header
+ */
+export const extractTokenFromHeader = (authHeader?: string): string | null => {
+  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+    return null;
+  }
+  return authHeader.split(' ')[1];
+};
+
+/**
+ * Get token expiration date
+ */
+export const getTokenExpiration = (token: string): Date | null => {
   try {
-    return jwt.verify(token, secret) as T;
-  } catch (error) {
+    const decoded = jwt.decode(token) as JwtPayload;
+    if (decoded && decoded.exp) {
+      return new Date(decoded.exp * 1000);
+    }
+    return null;
+  } catch {
     return null;
   }
 };
 
-export const verifyAccessToken = (token: string): TokenPayload | null => {
-  return verifyToken<TokenPayload>(token, config.jwt.accessSecret);
-};
-
-export const verifyRefreshToken = (token: string): { userId: string } | null => {
-  return verifyToken<{ userId: string }>(token, config.jwt.refreshSecret);
+/**
+ * Check if token is expired
+ */
+export const isTokenExpired = (token: string): boolean => {
+  const expiration = getTokenExpiration(token);
+  if (!expiration) return true;
+  return expiration < new Date();
 };
