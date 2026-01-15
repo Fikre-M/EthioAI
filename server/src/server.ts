@@ -6,6 +6,9 @@ import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import { PrismaClient } from "@prisma/client";
 import { errorHandler, notFound } from "./middlewares/error.middleware";
+import { requestLogger, errorLogger } from "./middlewares/logging.middleware";
+import { responseMiddleware } from "./utils/response";
+import { log } from "./utils/logger";
 import { config } from "./config";
 
 // Import routes
@@ -17,6 +20,9 @@ const prisma = new PrismaClient({
 });
 
 const app = express();
+
+// Trust proxy for accurate IP addresses
+app.set('trust proxy', 1);
 
 // Security middleware with custom CSP
 app.use(
@@ -44,9 +50,24 @@ app.use(compression());
 const limiter = rateLimit({
   windowMs: config.rateLimit.windowMs,
   max: config.rateLimit.maxRequests,
-  message: "Too many requests from this IP, please try again later.",
+  message: {
+    success: false,
+    message: "Too many requests from this IP, please try again later.",
+    code: "RATE_LIMIT_EXCEEDED"
+  },
   standardHeaders: true,
   legacyHeaders: false,
+  handler: (req, res) => {
+    log.security('Rate limit exceeded', req.ip, req.get('User-Agent'), {
+      url: req.originalUrl,
+      method: req.method,
+    });
+    res.status(429).json({
+      success: false,
+      message: "Too many requests from this IP, please try again later.",
+      code: "RATE_LIMIT_EXCEEDED"
+    });
+  },
 });
 app.use("/api/", limiter);
 
@@ -61,9 +82,21 @@ app.use(
 );
 
 // Body parsing middleware
-app.use(express.json({ limit: "10mb" }));
+app.use(express.json({ 
+  limit: "10mb",
+  verify: (req, res, buf) => {
+    // Store raw body for webhook verification
+    (req as any).rawBody = buf;
+  }
+}));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(cookieParser());
+
+// Add response utilities to all responses
+app.use(responseMiddleware);
+
+// Request logging middleware
+app.use(requestLogger);
 
 // Health check endpoint
 app.get("/health", (req: Request, res: Response) => {
@@ -73,40 +106,65 @@ app.get("/health", (req: Request, res: Response) => {
     timestamp: new Date().toISOString(),
     environment: config.nodeEnv,
     version: "1.0.0",
+    uptime: process.uptime(),
+  });
+});
+
+// API status endpoint
+app.get("/api/status", (req: Request, res: Response) => {
+  res.status(200).json({
+    success: true,
+    message: "API is operational",
+    data: {
+      environment: config.nodeEnv,
+      version: "1.0.0",
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+    },
   });
 });
 
 // API Routes
 app.use("/api/auth", authRoutes);
 
+// Error logging middleware (before error handlers)
+app.use(errorLogger);
+
 // 404 handler
 app.use(notFound);
 
-// Error handler
+// Global error handler
 app.use(errorHandler);
 
 // Start server
 const server = app.listen(config.port, () => {
-  console.log(`🚀 Server running on port ${config.port}`);
-  console.log(`🌍 Environment: ${config.nodeEnv}`);
-  console.log(`🔗 Client URL: ${config.clientUrl}`);
-  console.log(`📄 Health Check: http://localhost:${config.port}/health`);
+  log.info(`🚀 Server running on port ${config.port}`);
+  log.info(`🌍 Environment: ${config.nodeEnv}`);
+  log.info(`🔗 Client URL: ${config.clientUrl}`);
+  log.info(`📄 Health Check: http://localhost:${config.port}/health`);
+  log.info(`📊 API Status: http://localhost:${config.port}/api/status`);
 });
 
 // Graceful shutdown handling
 const gracefulShutdown = (signal: string) => {
-  console.log(`\n📡 Received ${signal}. Starting graceful shutdown...`);
+  log.info(`📡 Received ${signal}. Starting graceful shutdown...`);
   
   server.close(async () => {
-    console.log('🔌 HTTP server closed');
+    log.info('🔌 HTTP server closed');
     
     // Close database connection
     await prisma.$disconnect();
-    console.log('🗄️ Database connection closed');
+    log.info('🗄️ Database connection closed');
     
-    console.log('✅ Graceful shutdown completed');
+    log.info('✅ Graceful shutdown completed');
     process.exit(0);
   });
+
+  // Force shutdown after 30 seconds
+  setTimeout(() => {
+    log.error('❌ Forced shutdown after timeout');
+    process.exit(1);
+  }, 30000);
 };
 
 // Handle shutdown signals
@@ -115,13 +173,13 @@ process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
 // Handle unhandled promise rejections
 process.on("unhandledRejection", (err: Error) => {
-  console.error(`❌ Unhandled Rejection: ${err.message}`);
+  log.error(`❌ Unhandled Rejection: ${err.message}`, { stack: err.stack });
   server.close(() => process.exit(1));
 });
 
 // Handle uncaught exceptions
 process.on("uncaughtException", (err: Error) => {
-  console.error(`❌ Uncaught Exception: ${err.message}`);
+  log.error(`❌ Uncaught Exception: ${err.message}`, { stack: err.stack });
   server.close(() => process.exit(1));
 });
 
