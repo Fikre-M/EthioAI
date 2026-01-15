@@ -75,6 +75,12 @@ export const API_ENDPOINTS = {
     LIST: '/api/tours',
     DETAIL: (id: string) => `/api/tours/${id}`,
     SEARCH: '/api/tours/search',
+    FEATURED: '/api/tours/featured',
+    POPULAR: '/api/tours/popular',
+    CATEGORIES: '/api/tours/categories',
+    CATEGORY: (category: string) => `/api/tours/category/${category}`,
+    AVAILABILITY: (id: string) => `/api/tours/${id}/availability`,
+    STATUS: (id: string) => `/api/tours/${id}/status`,
   },
   BOOKINGS: {
     LIST: '/api/bookings',

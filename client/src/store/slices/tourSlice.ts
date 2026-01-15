@@ -1,19 +1,19 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit'
-import { Tour } from '@/types/tour'
+import { tourService, Tour, TourFilters as ServiceTourFilters } from '@/services/tour.service'
 
 // Types
 export interface TourFilters {
   search?: string
   category?: string
-  difficulty?: string
+  difficulty?: 'Easy' | 'Moderate' | 'Challenging'
   minPrice?: number
   maxPrice?: number
   minDuration?: number
   maxDuration?: number
-  region?: string
-  startDate?: Date
-  endDate?: Date
-  tags?: string[]
+  maxGroupSize?: number
+  tags?: string
+  featured?: boolean
+  guideId?: string
 }
 
 export interface TourPagination {
@@ -21,28 +21,33 @@ export interface TourPagination {
   limit: number
   total: number
   totalPages: number
+  hasNext: boolean
+  hasPrev: boolean
 }
 
 export interface TourState {
   tours: Tour[]
-  filteredTours: Tour[]
+  featuredTours: Tour[]
+  popularTours: Tour[]
   selectedTour: Tour | null
   wishlist: string[] // Tour IDs
   comparison: string[] // Tour IDs (max 3)
   filters: TourFilters
   pagination: TourPagination
-  sortBy: 'price' | 'rating' | 'duration' | 'popularity'
+  sortBy: 'createdAt' | 'price' | 'duration' | 'title' | 'rating'
   sortOrder: 'asc' | 'desc'
   loading: boolean
   error: string | null
-  searchSuggestions: string[]
+  searchResults: Tour[]
+  categories: Array<{ name: string; count: number }>
 }
 
 const initialState: TourState = {
   tours: [],
-  filteredTours: [],
+  featuredTours: [],
+  popularTours: [],
   selectedTour: null,
-  wishlist: [],
+  wishlist: JSON.parse(localStorage.getItem('tour_wishlist') || '[]'),
   comparison: [],
   filters: {},
   pagination: {
@@ -50,31 +55,30 @@ const initialState: TourState = {
     limit: 12,
     total: 0,
     totalPages: 0,
+    hasNext: false,
+    hasPrev: false,
   },
-  sortBy: 'popularity',
+  sortBy: 'createdAt',
   sortOrder: 'desc',
   loading: false,
   error: null,
-  searchSuggestions: [],
+  searchResults: [],
+  categories: [],
 }
 
-// Async Thunks (will be connected to API later)
+// Async Thunks
 export const fetchTours = createAsyncThunk(
   'tours/fetchTours',
-  async (params: { filters?: TourFilters; page?: number; limit?: number }, { rejectWithValue }) => {
+  async (params: { filters?: TourFilters; page?: number; limit?: number } = {}, { rejectWithValue }) => {
     try {
-      // TODO: Replace with actual API call
-      // const response = await axios.get('/api/tours', { params })
-      // return response.data
-      
-      // Mock data for now
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      return {
-        tours: [],
-        total: 0,
+      const serviceFilters: ServiceTourFilters = {
         page: params.page || 1,
-        totalPages: 0,
+        limit: params.limit || 12,
+        ...params.filters,
       }
+      
+      const response = await tourService.getTours(serviceFilters)
+      return response
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch tours')
     }
@@ -85,71 +89,86 @@ export const fetchTourById = createAsyncThunk(
   'tours/fetchTourById',
   async (tourId: string, { rejectWithValue }) => {
     try {
-      // TODO: Replace with actual API call
-      // const response = await axios.get(`/api/tours/${tourId}`)
-      // return response.data
-      
-      // Mock data for now
-      console.log('Fetching tour:', tourId)
-      await new Promise((resolve) => setTimeout(resolve, 300))
-      return null
+      const tour = await tourService.getTourById(tourId)
+      return tour
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch tour details')
     }
   }
 )
 
+export const fetchFeaturedTours = createAsyncThunk(
+  'tours/fetchFeaturedTours',
+  async (limit: number = 6, { rejectWithValue }) => {
+    try {
+      const tours = await tourService.getFeaturedTours(limit)
+      return tours
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch featured tours')
+    }
+  }
+)
+
+export const fetchPopularTours = createAsyncThunk(
+  'tours/fetchPopularTours',
+  async (limit: number = 10, { rejectWithValue }) => {
+    try {
+      const tours = await tourService.getPopularTours(limit)
+      return tours
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch popular tours')
+    }
+  }
+)
+
 export const searchTours = createAsyncThunk(
   'tours/searchTours',
-  async (query: string, { rejectWithValue }) => {
+  async (params: { query: string; filters?: Omit<TourFilters, 'search'> }, { rejectWithValue }) => {
     try {
-      // TODO: Replace with actual API call
-      // const response = await axios.get('/api/tours/search', { params: { q: query } })
-      // return response.data
-      
-      // Mock data for now
-      console.log('Searching tours:', query)
-      await new Promise((resolve) => setTimeout(resolve, 200))
-      return {
-        tours: [],
-        suggestions: [],
-      }
+      const tours = await tourService.searchTours(params.query, params.filters)
+      return tours
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.message || 'Search failed')
     }
   }
 )
 
-export const addToWishlist = createAsyncThunk(
-  'tours/addToWishlist',
-  async (tourId: string, { rejectWithValue }) => {
+export const fetchToursByCategory = createAsyncThunk(
+  'tours/fetchToursByCategory',
+  async (params: { category: string; limit?: number }, { rejectWithValue }) => {
     try {
-      // TODO: Replace with actual API call
-      // const response = await axios.post('/api/users/wishlist', { tourId })
-      // return response.data
-      
-      // Mock data for now
-      await new Promise((resolve) => setTimeout(resolve, 200))
-      return tourId
+      const tours = await tourService.getToursByCategory(params.category, params.limit)
+      return tours
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to add to wishlist')
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch tours by category')
     }
   }
 )
 
-export const removeFromWishlist = createAsyncThunk(
-  'tours/removeFromWishlist',
-  async (tourId: string, { rejectWithValue }) => {
+export const fetchTourCategories = createAsyncThunk(
+  'tours/fetchTourCategories',
+  async (_, { rejectWithValue }) => {
     try {
-      // TODO: Replace with actual API call
-      // const response = await axios.delete(`/api/users/wishlist/${tourId}`)
-      // return response.data
-      
-      // Mock data for now
-      await new Promise((resolve) => setTimeout(resolve, 200))
-      return tourId
+      const categories = await tourService.getTourCategories()
+      return categories
     } catch (error: any) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to remove from wishlist')
+      return rejectWithValue(error.response?.data?.message || 'Failed to fetch categories')
+    }
+  }
+)
+
+export const checkTourAvailability = createAsyncThunk(
+  'tours/checkAvailability',
+  async (params: { tourId: string; startDate: string; endDate: string; groupSize: number }, { rejectWithValue }) => {
+    try {
+      const availability = await tourService.checkAvailability(params.tourId, {
+        startDate: params.startDate,
+        endDate: params.endDate,
+        groupSize: params.groupSize,
+      })
+      return availability
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || 'Failed to check availability')
     }
   }
 )
@@ -193,7 +212,7 @@ const tourSlice = createSlice({
       state.pagination.page = 1
     },
 
-    // Wishlist (local state management)
+    // Wishlist (with localStorage persistence)
     toggleWishlist: (state, action: PayloadAction<string>) => {
       const tourId = action.payload
       const index = state.wishlist.indexOf(tourId)
@@ -202,9 +221,12 @@ const tourSlice = createSlice({
       } else {
         state.wishlist.push(tourId)
       }
+      // Persist to localStorage
+      localStorage.setItem('tour_wishlist', JSON.stringify(state.wishlist))
     },
     clearWishlist: (state) => {
       state.wishlist = []
+      localStorage.removeItem('tour_wishlist')
     },
 
     // Comparison
@@ -226,87 +248,14 @@ const tourSlice = createSlice({
       state.selectedTour = action.payload
     },
 
-    // Local filtering (client-side)
-    applyLocalFilters: (state) => {
-      let filtered = [...state.tours]
-
-      // Apply search filter
-      if (state.filters.search) {
-        const searchLower = state.filters.search.toLowerCase()
-        filtered = filtered.filter(
-          (tour) =>
-            tour.title.toLowerCase().includes(searchLower) ||
-            tour.description.toLowerCase().includes(searchLower) ||
-            tour.location.toLowerCase().includes(searchLower)
-        )
-      }
-
-      // Apply category filter
-      if (state.filters.category) {
-        filtered = filtered.filter((tour) => tour.category === state.filters.category)
-      }
-
-      // Apply difficulty filter
-      if (state.filters.difficulty) {
-        filtered = filtered.filter((tour) => tour.difficulty === state.filters.difficulty)
-      }
-
-      // Apply price range filter
-      if (state.filters.minPrice !== undefined) {
-        filtered = filtered.filter((tour) => tour.price >= state.filters.minPrice!)
-      }
-      if (state.filters.maxPrice !== undefined) {
-        filtered = filtered.filter((tour) => tour.price <= state.filters.maxPrice!)
-      }
-
-      // Apply duration filter
-      if (state.filters.minDuration !== undefined) {
-        filtered = filtered.filter((tour) => tour.durationDays >= state.filters.minDuration!)
-      }
-      if (state.filters.maxDuration !== undefined) {
-        filtered = filtered.filter((tour) => tour.durationDays <= state.filters.maxDuration!)
-      }
-
-      // Apply region filter
-      if (state.filters.region) {
-        filtered = filtered.filter((tour) => tour.region === state.filters.region)
-      }
-
-      // Apply tags filter
-      if (state.filters.tags && state.filters.tags.length > 0) {
-        filtered = filtered.filter((tour) =>
-          state.filters.tags!.some((tag) => tour.tags.includes(tag))
-        )
-      }
-
-      // Apply sorting
-      filtered.sort((a, b) => {
-        let comparison = 0
-        switch (state.sortBy) {
-          case 'price':
-            comparison = a.price - b.price
-            break
-          case 'rating':
-            comparison = a.rating - b.rating
-            break
-          case 'duration':
-            comparison = a.durationDays - b.durationDays
-            break
-          case 'popularity':
-            comparison = a.reviewCount - b.reviewCount
-            break
-        }
-        return state.sortOrder === 'asc' ? comparison : -comparison
-      })
-
-      state.filteredTours = filtered
-      state.pagination.total = filtered.length
-      state.pagination.totalPages = Math.ceil(filtered.length / state.pagination.limit)
-    },
-
     // Clear error
     clearError: (state) => {
       state.error = null
+    },
+
+    // Clear search results
+    clearSearchResults: (state) => {
+      state.searchResults = []
     },
   },
   extraReducers: (builder) => {
@@ -319,10 +268,7 @@ const tourSlice = createSlice({
       .addCase(fetchTours.fulfilled, (state, action) => {
         state.loading = false
         state.tours = action.payload.tours
-        state.filteredTours = action.payload.tours
-        state.pagination.total = action.payload.total
-        state.pagination.page = action.payload.page
-        state.pagination.totalPages = action.payload.totalPages
+        state.pagination = action.payload.pagination
       })
       .addCase(fetchTours.rejected, (state, action) => {
         state.loading = false
@@ -344,6 +290,24 @@ const tourSlice = createSlice({
         state.error = action.payload as string
       })
 
+    // Fetch Featured Tours
+    builder
+      .addCase(fetchFeaturedTours.fulfilled, (state, action) => {
+        state.featuredTours = action.payload
+      })
+      .addCase(fetchFeaturedTours.rejected, (state, action) => {
+        state.error = action.payload as string
+      })
+
+    // Fetch Popular Tours
+    builder
+      .addCase(fetchPopularTours.fulfilled, (state, action) => {
+        state.popularTours = action.payload
+      })
+      .addCase(fetchPopularTours.rejected, (state, action) => {
+        state.error = action.payload as string
+      })
+
     // Search Tours
     builder
       .addCase(searchTours.pending, (state) => {
@@ -352,31 +316,29 @@ const tourSlice = createSlice({
       })
       .addCase(searchTours.fulfilled, (state, action) => {
         state.loading = false
-        state.filteredTours = action.payload.tours
-        state.searchSuggestions = action.payload.suggestions
+        state.searchResults = action.payload
       })
       .addCase(searchTours.rejected, (state, action) => {
         state.loading = false
         state.error = action.payload as string
       })
 
-    // Add to Wishlist
+    // Fetch Tours by Category
     builder
-      .addCase(addToWishlist.fulfilled, (state, action) => {
-        if (!state.wishlist.includes(action.payload)) {
-          state.wishlist.push(action.payload)
-        }
+      .addCase(fetchToursByCategory.fulfilled, (state, action) => {
+        // Could store category-specific tours if needed
+        state.tours = action.payload
       })
-      .addCase(addToWishlist.rejected, (state, action) => {
+      .addCase(fetchToursByCategory.rejected, (state, action) => {
         state.error = action.payload as string
       })
 
-    // Remove from Wishlist
+    // Fetch Categories
     builder
-      .addCase(removeFromWishlist.fulfilled, (state, action) => {
-        state.wishlist = state.wishlist.filter((id) => id !== action.payload)
+      .addCase(fetchTourCategories.fulfilled, (state, action) => {
+        state.categories = action.payload
       })
-      .addCase(removeFromWishlist.rejected, (state, action) => {
+      .addCase(fetchTourCategories.rejected, (state, action) => {
         state.error = action.payload as string
       })
   },
@@ -398,13 +360,14 @@ export const {
   removeFromComparison,
   clearComparison,
   setSelectedTour,
-  applyLocalFilters,
   clearError,
+  clearSearchResults,
 } = tourSlice.actions
 
 // Selectors
 export const selectTours = (state: { tours: TourState }) => state.tours.tours
-export const selectFilteredTours = (state: { tours: TourState }) => state.tours.filteredTours
+export const selectFeaturedTours = (state: { tours: TourState }) => state.tours.featuredTours
+export const selectPopularTours = (state: { tours: TourState }) => state.tours.popularTours
 export const selectSelectedTour = (state: { tours: TourState }) => state.tours.selectedTour
 export const selectWishlist = (state: { tours: TourState }) => state.tours.wishlist
 export const selectComparison = (state: { tours: TourState }) => state.tours.comparison
@@ -416,7 +379,8 @@ export const selectSorting = (state: { tours: TourState }) => ({
 })
 export const selectLoading = (state: { tours: TourState }) => state.tours.loading
 export const selectError = (state: { tours: TourState }) => state.tours.error
-export const selectSearchSuggestions = (state: { tours: TourState }) => state.tours.searchSuggestions
+export const selectSearchResults = (state: { tours: TourState }) => state.tours.searchResults
+export const selectCategories = (state: { tours: TourState }) => state.tours.categories
 
 // Helper selectors
 export const selectIsInWishlist = (tourId: string) => (state: { tours: TourState }) =>
@@ -430,12 +394,5 @@ export const selectWishlistTours = (state: { tours: TourState }) =>
 
 export const selectComparisonTours = (state: { tours: TourState }) =>
   state.tours.tours.filter((tour) => state.tours.comparison.includes(tour.id))
-
-export const selectPaginatedTours = (state: { tours: TourState }) => {
-  const { filteredTours, pagination } = state.tours
-  const start = (pagination.page - 1) * pagination.limit
-  const end = start + pagination.limit
-  return filteredTours.slice(start, end)
-}
 
 export default tourSlice.reducer
