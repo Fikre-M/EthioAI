@@ -21,7 +21,7 @@ export const config = {
     pass: process.env.EMAIL_PASS || process.env.SMTP_PASS,
     from: process.env.EMAIL_FROM || 'noreply@ethioai.com',
   },
-  clientUrl: process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:3002',
+  clientUrl: process.env.CLIENT_URL || process.env.FRONTEND_URL || 'http://localhost:3001',
   stripe: {
     secretKey: process.env.STRIPE_SECRET_KEY,
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET,
