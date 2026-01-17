@@ -19,6 +19,10 @@ import paymentRoutes from "./routes/payment.routes";
 import marketplaceRoutes from "./routes/marketplace.routes";
 import chatRoutes from "./routes/chat.routes";
 import culturalRoutes from "./routes/cultural.routes";
+import itineraryRoutes from "./routes/itinerary.routes";
+import transportRoutes from "./routes/transport.routes";
+import transportRoutes from "./routes/transport.routes";
+import itineraryRoutes from "./routes/itinerary.routes";
 
 // Initialize Prisma Client
 const prisma = new PrismaClient({
@@ -138,6 +142,10 @@ app.use("/api/payments", paymentRoutes);
 app.use("/api/marketplace", marketplaceRoutes);
 app.use("/api/chat", chatRoutes);
 app.use("/api/cultural", culturalRoutes);
+app.use("/api/itinerary", itineraryRoutes);
+app.use("/api/transport", transportRoutes);
+app.use("/api/transport", transportRoutes);
+app.use("/api/itinerary", itineraryRoutes);
 
 // Error logging middleware (before error handlers)
 app.use(errorLogger);
