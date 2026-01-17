@@ -246,4 +246,5 @@ export const requireRoles = {
   user: authorize(['USER', 'VENDOR', 'GUIDE', 'ADMIN']),
   vendorOrAdmin: authorize(['VENDOR', 'ADMIN']),
   guideOrAdmin: authorize(['GUIDE', 'ADMIN']),
+  adminOrVendor: authorize(['ADMIN', 'VENDOR']),
 };

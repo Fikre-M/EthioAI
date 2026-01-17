@@ -82,8 +82,84 @@ export const createTourSchema = z.object({
   }
 );
 
-// Tour update schema (all fields optional except ID)
-export const updateTourSchema = createTourSchema.partial();
+// Tour update schema (all fields optional)
+export const updateTourSchema = z.object({
+  title: z.string()
+    .min(3, 'Title must be at least 3 characters')
+    .max(200, 'Title must not exceed 200 characters')
+    .optional(),
+  description: z.string()
+    .min(50, 'Description must be at least 50 characters')
+    .max(5000, 'Description must not exceed 5000 characters')
+    .optional(),
+  shortDescription: z.string()
+    .max(500, 'Short description must not exceed 500 characters')
+    .optional(),
+  images: z.array(z.string().url('Invalid image URL'))
+    .min(1, 'At least one image is required')
+    .max(10, 'Maximum 10 images allowed')
+    .optional(),
+  price: z.number()
+    .positive('Price must be positive')
+    .max(100000, 'Price must not exceed $100,000')
+    .optional(),
+  discountPrice: z.number()
+    .positive('Discount price must be positive')
+    .optional(),
+  duration: z.number()
+    .int('Duration must be a whole number')
+    .min(1, 'Duration must be at least 1 day')
+    .max(365, 'Duration must not exceed 365 days')
+    .optional(),
+  maxGroupSize: z.number()
+    .int('Group size must be a whole number')
+    .min(1, 'Group size must be at least 1')
+    .max(100, 'Group size must not exceed 100')
+    .optional(),
+  difficulty: z.enum(['Easy', 'Moderate', 'Challenging'], {
+    errorMap: () => ({ message: 'Difficulty must be Easy, Moderate, or Challenging' })
+  }).optional(),
+  startLocation: locationSchema.optional(),
+  locations: z.array(locationSchema)
+    .min(1, 'At least one location is required')
+    .optional(),
+  included: z.array(z.string().min(1, 'Included item cannot be empty'))
+    .min(1, 'At least one included item is required')
+    .optional(),
+  excluded: z.array(z.string().min(1, 'Excluded item cannot be empty'))
+    .optional(),
+  itinerary: z.array(z.object({
+    day: z.number().int().positive(),
+    title: z.string().min(1, 'Day title is required'),
+    activities: z.array(z.string().min(1, 'Activity cannot be empty'))
+      .min(1, 'At least one activity per day is required'),
+    accommodation: z.string().optional(),
+    meals: z.array(z.string()).optional(),
+  })).min(1, 'Itinerary is required').optional(),
+  tags: z.array(z.string().min(1, 'Tag cannot be empty'))
+    .max(10, 'Maximum 10 tags allowed')
+    .optional(),
+  category: z.string()
+    .min(1, 'Category is required')
+    .optional(),
+  language: z.string()
+    .min(2, 'Language code must be at least 2 characters')
+    .optional(),
+  metaTitle: z.string()
+    .max(60, 'Meta title must not exceed 60 characters')
+    .optional(),
+  metaDescription: z.string()
+    .max(160, 'Meta description must not exceed 160 characters')
+    .optional(),
+  featured: z.boolean().optional(),
+  guideId: z.string().uuid('Invalid guide ID').optional(),
+}).refine(
+  (data) => !data.discountPrice || !data.price || data.discountPrice < data.price,
+  {
+    message: 'Discount price must be less than regular price',
+    path: ['discountPrice'],
+  }
+);
 
 // Tour query/filter schema
 export const tourQuerySchema = z.object({
