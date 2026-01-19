@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { body, param, query } from 'express-validator';
-import { auth } from '../middlewares/auth.middleware';
+import { authenticate } from '../middlewares/auth.middleware';
 import { validate } from '../middlewares/validation.middleware';
 import { handleUploadError } from '../middlewares/upload.middleware';
 import {
@@ -24,7 +24,7 @@ import {
 const router = Router();
 
 // Apply authentication to all upload routes
-router.use(auth);
+router.use(authenticate);
 
 /**
  * Upload single file

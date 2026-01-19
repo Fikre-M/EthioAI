@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { TourController } from '../controllers/tour.controller';
 import { authenticate, optionalAuth, requireRoles } from '../middlewares/auth.middleware';
 import { validate, commonSchemas } from '../middlewares/validation.middleware';
+import { cache, publicCache, userCache, invalidateCache, CacheTTL } from '../middlewares/cache.middleware';
 import {
   createTourSchema,
   updateTourSchema,
@@ -17,16 +18,60 @@ const router = Router();
  * All routes are prefixed with /api/tours
  */
 
-// Public routes (no authentication required)
-router.get('/search', validate({ query: tourQuerySchema }), TourController.searchTours);
-router.get('/featured', TourController.getFeaturedTours);
-router.get('/popular', TourController.getPopularTours);
-router.get('/categories', TourController.getTourCategories);
-router.get('/category/:category', TourController.getToursByCategory);
+// Public routes (no authentication required) - with caching
+router.get('/search', 
+  publicCache(CacheTTL.SHORT), // Cache search results for 5 minutes
+  validate({ query: tourQuerySchema }), 
+  TourController.searchTours
+);
+
+router.get('/featured', 
+  publicCache(CacheTTL.LONG), // Cache featured tours for 1 hour
+  TourController.getFeaturedTours
+);
+
+router.get('/popular', 
+  publicCache(CacheTTL.MEDIUM), // Cache popular tours for 30 minutes
+  TourController.getPopularTours
+);
+
+router.get('/categories', 
+  publicCache(CacheTTL.VERY_LONG), // Cache categories for 24 hours
+  TourController.getTourCategories
+);
+
+router.get('/category/:category', 
+  publicCache(CacheTTL.LONG), // Cache category results for 1 hour
+  TourController.getToursByCategory
+);
 
 // Public routes with optional authentication (for personalized results)
-router.get('/', optionalAuth, validate({ query: tourQuerySchema }), TourController.getTours);
-router.get('/:id', optionalAuth, TourController.getTourById);
+router.get('/', 
+  optionalAuth, 
+  cache({ 
+    ttl: CacheTTL.MEDIUM,
+    keyGenerator: (req) => {
+      const authReq = req as any;
+      const userId = authReq.userId || 'anonymous';
+      return `tours:list:${userId}:${JSON.stringify(req.query)}`;
+    }
+  }),
+  validate({ query: tourQuerySchema }), 
+  TourController.getTours
+);
+
+router.get('/:id', 
+  optionalAuth, 
+  cache({
+    ttl: CacheTTL.LONG,
+    keyGenerator: (req) => {
+      const authReq = req as any;
+      const userId = authReq.userId || 'anonymous';
+      return `tour:${req.params.id}:${userId}`;
+    }
+  }),
+  TourController.getTourById
+);
 
 // Semi-public routes (anyone can check availability)
 router.post('/:id/availability', 
@@ -37,10 +82,11 @@ router.post('/:id/availability',
   TourController.checkAvailability
 );
 
-// Protected routes (authentication required)
+// Protected routes (authentication required) - with cache invalidation
 router.post('/', 
   authenticate, 
-  requireRoles.guideOrAdmin, 
+  requireRoles.guideOrAdmin,
+  invalidateCache(['tours:*', 'tour:*']), // Invalidate tour caches when creating
   validate({ body: createTourSchema }), 
   TourController.createTour
 );
@@ -48,6 +94,7 @@ router.post('/',
 router.put('/:id', 
   authenticate, 
   requireRoles.guideOrAdmin,
+  invalidateCache((req) => [`tour:${req.params.id}:*`, 'tours:*']), // Invalidate specific tour and lists
   validate({ 
     params: commonSchemas.uuidParam.params,
     body: updateTourSchema 
@@ -58,6 +105,7 @@ router.put('/:id',
 router.delete('/:id', 
   authenticate, 
   requireRoles.guideOrAdmin,
+  invalidateCache((req) => [`tour:${req.params.id}:*`, 'tours:*']), // Invalidate specific tour and lists
   validate({ params: commonSchemas.uuidParam.params }), 
   TourController.deleteTour
 );
@@ -65,6 +113,7 @@ router.delete('/:id',
 router.patch('/:id/status', 
   authenticate, 
   requireRoles.admin,
+  invalidateCache((req) => [`tour:${req.params.id}:*`, 'tours:*']), // Invalidate specific tour and lists
   validate({ 
     params: commonSchemas.uuidParam.params,
     body: updateTourStatusSchema 
@@ -72,10 +121,11 @@ router.patch('/:id/status',
   TourController.updateTourStatus
 );
 
-// Admin routes
+// Admin routes - with caching
 router.get('/admin/stats', 
   authenticate, 
-  requireRoles.admin, 
+  requireRoles.admin,
+  cache({ ttl: CacheTTL.SHORT }), // Cache stats for 5 minutes
   TourController.getTourStats
 );
 

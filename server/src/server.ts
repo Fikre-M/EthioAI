@@ -7,6 +7,9 @@ import rateLimit from "express-rate-limit";
 import { PrismaClient } from "@prisma/client";
 import { errorHandler, notFound } from "./middlewares/error.middleware";
 import { requestLogger, errorLogger } from "./middlewares/logging.middleware";
+import { cacheStats, cacheManagement } from "./middlewares/cache.middleware";
+import { performanceMonitoring, requestTimeout, memoryMonitoring, securityMonitoring } from "./middlewares/performance.middleware";
+import { monitoringService } from "./services/monitoring.service";
 import { responseMiddleware } from "./utils/response";
 import { log } from "./utils/logger";
 import { config } from "./config";
@@ -104,34 +107,158 @@ app.use(cookieParser());
 // Add response utilities to all responses
 app.use(responseMiddleware);
 
+// Performance and security monitoring
+app.use(performanceMonitoring());
+app.use(requestTimeout(30000)); // 30 second timeout
+app.use(memoryMonitoring());
+app.use(securityMonitoring());
+
 // Request logging middleware
 app.use(requestLogger);
 
-// Health check endpoint
-app.get("/health", (req: Request, res: Response) => {
-  res.status(200).json({
-    status: "OK",
-    message: "EthioAI Tourism Server is running",
-    timestamp: new Date().toISOString(),
-    environment: config.nodeEnv,
-    version: "1.0.0",
-    uptime: process.uptime(),
-  });
-});
+// Cache management middleware (for admin endpoints)
+app.use(cacheStats());
+app.use(cacheManagement());
 
-// API status endpoint
-app.get("/api/status", (req: Request, res: Response) => {
-  res.status(200).json({
-    success: true,
-    message: "API is operational",
-    data: {
-      environment: config.nodeEnv,
-      version: "1.0.0",
+// Health check endpoint
+app.get("/health", async (req: Request, res: Response) => {
+  try {
+    const healthCheck = await monitoringService.performHealthCheck()
+    
+    const statusCode = healthCheck.status === 'healthy' ? 200 : 
+                      healthCheck.status === 'degraded' ? 200 : 503
+    
+    res.status(statusCode).json({
+      status: healthCheck.status,
+      message: "EthioAI Tourism Server Health Check",
+      timestamp: healthCheck.timestamp,
+      environment: healthCheck.environment,
+      version: healthCheck.version,
+      uptime: healthCheck.uptime,
+      services: healthCheck.services,
+      metrics: healthCheck.metrics
+    })
+  } catch (error) {
+    logger.error('Health check failed:', error)
+    res.status(503).json({
+      status: 'unhealthy',
+      message: 'Health check failed',
       timestamp: new Date().toISOString(),
-      uptime: process.uptime(),
-    },
-  });
-});
+      error: (error as Error).message
+    })
+  }
+})
+
+// Detailed health check for monitoring systems
+app.get("/health/detailed", async (req: Request, res: Response) => {
+  try {
+    const [healthCheck, performanceStats, errorReports] = await Promise.all([
+      monitoringService.performHealthCheck(),
+      monitoringService.getPerformanceStats(),
+      monitoringService.getErrorReports(10)
+    ])
+    
+    res.json({
+      health: healthCheck,
+      performance: performanceStats,
+      recentErrors: errorReports,
+      timestamp: new Date().toISOString()
+    })
+  } catch (error) {
+    logger.error('Detailed health check failed:', error)
+    res.status(500).json({
+      success: false,
+      message: 'Detailed health check failed',
+      error: (error as Error).message
+    })
+  }
+})
+
+// Readiness probe (for Kubernetes)
+app.get("/ready", async (req: Request, res: Response) => {
+  try {
+    // Quick readiness check
+    await prisma.$queryRaw`SELECT 1`
+    res.status(200).json({ status: 'ready' })
+  } catch (error) {
+    res.status(503).json({ status: 'not ready', error: (error as Error).message })
+  }
+})
+
+// Liveness probe (for Kubernetes)
+app.get("/live", (req: Request, res: Response) => {
+  res.status(200).json({ status: 'alive', timestamp: new Date().toISOString() })
+})
+
+// API status endpoint with monitoring data
+app.get("/api/status", async (req: Request, res: Response) => {
+  try {
+    const performanceStats = monitoringService.getPerformanceStats()
+    
+    res.status(200).json({
+      success: true,
+      message: "API is operational",
+      data: {
+        environment: config.nodeEnv,
+        version: "1.0.0",
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime(),
+        performance: {
+          avgResponseTime: performanceStats.avgResponseTime,
+          requestsPerSecond: performanceStats.requestsPerSecond,
+          errorRate: performanceStats.errorRate,
+          totalRequests: performanceStats.totalRequests,
+          memoryUsage: Math.round(performanceStats.memoryUsage.heapUsed / 1024 / 1024) + 'MB'
+        }
+      },
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "API status check failed",
+      error: (error as Error).message
+    })
+  }
+})
+
+// Performance metrics endpoint (admin only)
+app.get("/api/metrics", async (req: Request, res: Response) => {
+  try {
+    // This would typically require admin authentication
+    const performanceStats = monitoringService.getPerformanceStats()
+    
+    res.json({
+      success: true,
+      data: performanceStats
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to get metrics",
+      error: (error as Error).message
+    })
+  }
+})
+
+// Error reports endpoint (admin only)
+app.get("/api/errors", async (req: Request, res: Response) => {
+  try {
+    // This would typically require admin authentication
+    const limit = parseInt(req.query.limit as string) || 50
+    const errorReports = await monitoringService.getErrorReports(limit)
+    
+    res.json({
+      success: true,
+      data: errorReports
+    })
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Failed to get error reports",
+      error: (error as Error).message
+    })
+  }
+})
 
 // API Routes
 app.use("/api/auth", authRoutes);
@@ -170,12 +297,21 @@ const gracefulShutdown = (signal: string) => {
   server.close(async () => {
     log.info('🔌 HTTP server closed');
     
-    // Close database connection
-    await prisma.$disconnect();
-    log.info('🗄️ Database connection closed');
-    
-    log.info('✅ Graceful shutdown completed');
-    process.exit(0);
+    try {
+      // Cleanup monitoring service
+      await monitoringService.cleanup();
+      log.info('📊 Monitoring service cleaned up');
+      
+      // Close database connection
+      await prisma.$disconnect();
+      log.info('🗄️ Database connection closed');
+      
+      log.info('✅ Graceful shutdown completed');
+      process.exit(0);
+    } catch (error) {
+      log.error('❌ Error during graceful shutdown:', error);
+      process.exit(1);
+    }
   });
 
   // Force shutdown after 30 seconds

@@ -5,6 +5,7 @@ import { log } from '../utils/logger';
 import { ResponseUtil } from '../utils/response';
 import { config } from '../config';
 import { AuthRequest } from './auth.middleware';
+import { monitoringService } from '../services/monitoring.service';
 
 interface ErrorWithStatus extends Error {
   statusCode?: number;
@@ -22,8 +23,20 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ) => {
-  // Log the error
-  log.error(`Error in ${req.method} ${req.originalUrl}`, {
+  // Record error for monitoring
+  const errorId = monitoringService.recordError(err, {
+    userId: req.userId,
+    requestId: req.headers['x-request-id'] as string,
+    userAgent: req.get('User-Agent'),
+    ip: req.ip,
+    method: req.method,
+    url: req.originalUrl,
+    statusCode: err.statusCode
+  });
+
+  // Log the error with error ID
+  log.error(`Error in ${req.method} ${req.originalUrl} [${errorId}]`, {
+    errorId,
     error: {
       name: err.name,
       message: err.message,
@@ -41,6 +54,9 @@ export const errorHandler = (
       params: req.params,
     },
   });
+
+  // Add error ID to response headers for tracking
+  res.setHeader('X-Error-ID', errorId);
 
   // Handle Prisma errors
   if (err instanceof PrismaClientKnownRequestError) {
@@ -70,6 +86,7 @@ export const errorHandler = (
       undefined,
       {
         code: err.code,
+        errorId,
         ...(config.nodeEnv !== 'production' && { stack: err.stack }),
       }
     );
@@ -80,7 +97,8 @@ export const errorHandler = (
     res,
     config.nodeEnv === 'production' 
       ? 'Something went wrong' 
-      : err.message
+      : err.message,
+    { errorId }
   );
 };
 
