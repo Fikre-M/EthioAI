@@ -21,8 +21,7 @@ import chatRoutes from "./routes/chat.routes";
 import culturalRoutes from "./routes/cultural.routes";
 import itineraryRoutes from "./routes/itinerary.routes";
 import transportRoutes from "./routes/transport.routes";
-import transportRoutes from "./routes/transport.routes";
-import itineraryRoutes from "./routes/itinerary.routes";
+import uploadRoutes from "./routes/upload.routes";
 
 // Initialize Prisma Client
 const prisma = new PrismaClient({
@@ -144,8 +143,7 @@ app.use("/api/chat", chatRoutes);
 app.use("/api/cultural", culturalRoutes);
 app.use("/api/itinerary", itineraryRoutes);
 app.use("/api/transport", transportRoutes);
-app.use("/api/transport", transportRoutes);
-app.use("/api/itinerary", itineraryRoutes);
+app.use("/api/upload", uploadRoutes);
 
 // Error logging middleware (before error handlers)
 app.use(errorLogger);

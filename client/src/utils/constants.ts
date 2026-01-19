@@ -249,4 +249,14 @@ export const API_ENDPOINTS = {
     POPULAR_DESTINATIONS: '/api/itinerary/popular-destinations',
     STATS: '/api/itinerary/admin/stats',
   },
+  UPLOAD: {
+    SINGLE: '/api/upload/single',
+    MULTIPLE: '/api/upload/multiple',
+    PROFILE: '/api/upload/profile',
+    PRODUCT: (productId: string) => `/api/upload/product/${productId}`,
+    TOUR: (tourId: string) => `/api/upload/tour/${tourId}`,
+    REVIEW: (reviewId: string) => `/api/upload/review/${reviewId}`,
+    DELETE: (publicId: string) => `/api/upload/${publicId}`,
+    OPTIMIZE: (publicId: string) => `/api/upload/optimize/${publicId}`,
+  },
 } as const
