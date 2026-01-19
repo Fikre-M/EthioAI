@@ -2,8 +2,6 @@
 
 A modern, AI-powered tourism platform for Ethiopia featuring multilingual chat, tour booking, and integrated payment processing.
 
-<<<<<<< HEAD
-=======
 ## 📁 Project Structure
 
 ```
@@ -11,33 +9,44 @@ EthioAI/
 ├── client/                 # Frontend React application
 │   ├── src/               # React source code
 │   ├── public/            # Static assets
-│   ├── docs/              # Frontend documentation
 │   └── package.json       # Frontend dependencies
 ├── server/                 # Backend Node.js application
 │   ├── src/               # Server source code
-│   ├── routes/            # API routes
-│   ├── models/            # Database models
+│   ├── prisma/            # Database schema and migrations
 │   └── package.json       # Backend dependencies
+├── docs/                   # 📚 All project documentation
+│   ├── client/            # Frontend documentation
+│   ├── server/            # Backend API documentation
+│   ├── specifications/    # Technical specifications
+│   └── README.md          # Documentation index
 └── README.md              # This file
 ```
 
 ## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+ and npm
+- MySQL database
+- Redis (optional, for caching)
 
 ### Frontend (Client)
 ```bash
 cd client
 npm install
 npm run dev
+# Runs on http://localhost:3001
 ```
 
 ### Backend (Server)
 ```bash
 cd server
 npm install
+cp .env.example .env
+# Configure your .env file
+npm run prisma:migrate
 npm run dev
+# Runs on http://localhost:5000
 ```
-
->>>>>>> 870d38fd3d7337614e6bd3cac11a147c53cf59f2
 ## ✨ Features
 
 ### 🤖 AI-Powered Chat
@@ -48,6 +57,61 @@ npm run dev
 
 ### 🎫 Tour Booking System
 - Interactive tour discovery
+- Real-time availability checking
+- Secure payment processing (Stripe + Chapa)
+- Booking management and tracking
+
+### 🛒 Marketplace
+- Ethiopian cultural products
+- Vendor management system
+- Order processing and tracking
+- Product reviews and ratings
+
+### 🏛️ Cultural Heritage
+- Ethiopian cultural content
+- Traditional recipes and artifacts
+- Educational articles and stories
+- Multi-language content support
+
+### 🗺️ Trip Planning
+- Custom itinerary creation
+- Budget tracking and management
+- Collaborative trip planning
+- Destination recommendations
+
+## 📚 Documentation
+
+Comprehensive documentation is available in the `/docs` folder:
+
+- **[📖 Documentation Index](docs/README.md)** - Complete documentation overview
+- **[🖥️ Server API Docs](docs/server/)** - Backend implementation guides
+- **[🌐 Client Docs](docs/client/)** - Frontend architecture and features
+- **[🔧 Integration Guides](docs/)** - System integration and testing
+- **[📋 Specifications](docs/specifications/)** - Technical specifications
+
+## 🛠️ Technology Stack
+
+### Frontend
+- **React 18** with TypeScript
+- **Redux Toolkit** for state management
+- **Tailwind CSS** for styling
+- **Vite** for build tooling
+- **React Router** for navigation
+- **i18next** for internationalization
+
+### Backend
+- **Node.js** with Express.js
+- **TypeScript** for type safety
+- **Prisma ORM** with MySQL
+- **JWT** authentication
+- **Redis** for caching
+- **Cloudinary** for media storage
+
+### Integrations
+- **Stripe** for international payments
+- **Chapa** for Ethiopian payments
+- **OpenAI** for AI chat features
+- **Socket.io** for real-time features
 - Real-time availability checking
 - Multi-step booking process
 - Waitlist functionality for popular tours
