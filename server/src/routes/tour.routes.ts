@@ -2,7 +2,8 @@ import { Router } from 'express';
 import { TourController } from '../controllers/tour.controller';
 import { authenticate, optionalAuth, requireRoles } from '../middlewares/auth.middleware';
 import { validate, commonSchemas } from '../middlewares/validation.middleware';
-import { cache, publicCache, userCache, invalidateCache, CacheTTL } from '../middlewares/cache.middleware';
+import { cache, publicCache, userCache, invalidateCache } from '../middlewares/cache.middleware';
+import { CacheTTL } from '../services/cache.service';
 import {
   createTourSchema,
   updateTourSchema,
