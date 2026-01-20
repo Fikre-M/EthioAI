@@ -326,6 +326,20 @@ export class MonitoringService {
     const startTime = Date.now()
     
     try {
+      // Check if Redis is configured
+      const redisHost = process.env.REDIS_HOST || 'localhost'
+      const redisPort = process.env.REDIS_PORT || '6379'
+      
+      // If Redis is not configured, return healthy status for development
+      if (!process.env.REDIS_HOST && process.env.NODE_ENV === 'development') {
+        return {
+          status: 'healthy',
+          responseTime: Date.now() - startTime,
+          message: 'Cache disabled for development (Redis not configured)',
+          lastCheck: new Date()
+        }
+      }
+      
       const testKey = 'health-check'
       await cacheService.set(testKey, 'test', { ttl: 10 })
       const result = await cacheService.get(testKey)
@@ -340,6 +354,16 @@ export class MonitoringService {
         lastCheck: new Date()
       }
     } catch (error) {
+      // In development, treat cache errors as degraded instead of unhealthy
+      if (process.env.NODE_ENV === 'development') {
+        return {
+          status: 'degraded',
+          responseTime: Date.now() - startTime,
+          message: 'Cache unavailable (Redis not running) - development mode',
+          lastCheck: new Date()
+        }
+      }
+      
       return {
         status: 'unhealthy',
         responseTime: Date.now() - startTime,

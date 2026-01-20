@@ -1,0 +1,187 @@
+name: Test Suite
+
+on:
+  schedule:
+    # Run tests daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  workflow_dispatch:
+    # Allow manual trigger
+
+jobs:
+  # Integration Tests
+  integration-tests:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test_password
+          MYSQL_DATABASE: ethioai_tourism_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        cache-dependency-path: server/package-lock.json
+
+    - name: Install dependencies
+      working-directory: ./server
+      run: npm ci
+
+    - name: Setup test database
+      working-directory: ./server
+      run: |
+        cp .env.example .env.test
+        echo "DATABASE_URL=mysql://root:test_password@localhost:3306/ethioai_tourism_test" >> .env.test
+        npx prisma migrate deploy
+      env:
+        DATABASE_URL: mysql://root:test_password@localhost:3306/ethioai_tourism_test
+
+    - name: Seed test data
+      working-directory: ./server
+      run: npm run seed:test
+      env:
+        DATABASE_URL: mysql://root:test_password@localhost:3306/ethioai_tourism_test
+
+    - name: Run integration tests
+      working-directory: ./server
+      run: npm run test:integration
+      env:
+        NODE_ENV: test
+        DATABASE_URL: mysql://root:test_password@localhost:3306/ethioai_tourism_test
+
+  # End-to-End Tests
+  e2e-tests:
+    name: E2E Tests
+    runs-on: ubuntu-latest
+    
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: test_password
+          MYSQL_DATABASE: ethioai_tourism_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=3
+      
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install backend dependencies
+      working-directory: ./server
+      run: npm ci
+
+    - name: Install frontend dependencies
+      working-directory: ./client
+      run: npm ci
+
+    - name: Setup test environment
+      working-directory: ./server
+      run: |
+        cp .env.example .env.test
+        echo "DATABASE_URL=mysql://root:test_password@localhost:3306/ethioai_tourism_test" >> .env.test
+        npx prisma migrate deploy
+        npm run seed:test
+      env:
+        DATABASE_URL: mysql://root:test_password@localhost:3306/ethioai_tourism_test
+
+    - name: Build and start backend
+      working-directory: ./server
+      run: |
+        npm run build
+        npm start &
+        sleep 10
+      env:
+        NODE_ENV: test
+        DATABASE_URL: mysql://root:test_password@localhost:3306/ethioai_tourism_test
+
+    - name: Build and start frontend
+      working-directory: ./client
+      run: |
+        npm run build
+        npm run preview &
+        sleep 5
+      env:
+        VITE_API_URL: http://localhost:5000
+
+    - name: Install Playwright
+      working-directory: ./client
+      run: npx playwright install --with-deps
+
+    - name: Run E2E tests
+      working-directory: ./client
+      run: npm run test:e2e
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: playwright-report
+        path: client/playwright-report/
+        retention-days: 30
+
+  # Performance Tests
+  performance-tests:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install k6
+      run: |
+        sudo gpg -k
+        sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+        echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+        sudo apt-get update
+        sudo apt-get install k6
+
+    - name: Run performance tests
+      run: k6 run tests/performance/load-test.js
+
+    - name: Upload performance results
+      uses: actions/upload-artifact@v4
+      with:
+        name: performance-results
+        path: performance-results.json

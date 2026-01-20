@@ -21,6 +21,11 @@ export class CacheService {
    */
   async get<T>(key: string, options: CacheOptions = {}): Promise<T | null> {
     try {
+      // Check if Redis is available in development
+      if (!process.env.REDIS_HOST && process.env.NODE_ENV === 'development') {
+        return null // Return null to indicate cache miss
+      }
+      
       const fullKey = this.buildKey(key, options.prefix)
       const cached = await this.redis.get(fullKey)
       
@@ -47,6 +52,11 @@ export class CacheService {
    */
   async set<T>(key: string, value: T, options: CacheOptions = {}): Promise<boolean> {
     try {
+      // Check if Redis is available in development
+      if (!process.env.REDIS_HOST && process.env.NODE_ENV === 'development') {
+        return true // Return true to indicate success (no-op)
+      }
+      
       const fullKey = this.buildKey(key, options.prefix)
       const ttl = options.ttl || this.defaultTTL
       
