@@ -12,18 +12,31 @@ import {
 import { 
   NotFoundError, 
   ValidationError,
-  PaymentError 
+  AppError 
 } from '../middlewares/error.middleware';
+
+// Custom payment error class
+export class PaymentError extends AppError {
+  constructor(message: string) {
+    super(message, 400, 'PAYMENT_ERROR');
+  }
+}
 import { calculatePagination, PaginationMeta } from '../utils/response';
 import { log } from '../utils/logger';
-import { config } from '../config';
+import { config } from '../config/index';
 
 const prisma = new PrismaClient();
 
-// Initialize Stripe
-const stripe = new Stripe(config.stripe.secretKey, {
-  apiVersion: '2024-12-18.acacia',
-});
+// Initialize Stripe only if key is provided
+let stripe: Stripe | null = null;
+
+if (config.payment.stripe.secretKey) {
+  stripe = new Stripe(config.payment.stripe.secretKey, {
+    apiVersion: '2023-10-16',
+  });
+} else {
+  console.warn('⚠️ Stripe secret key not provided - Stripe payments disabled');
+}
 
 export class PaymentService {
   /**
@@ -33,6 +46,9 @@ export class PaymentService {
     data: CreatePaymentIntentInput,
     userId: string
   ): Promise<{ clientSecret: string; paymentIntentId: string; payment: Payment }> {
+    if (!stripe) {
+      throw new PaymentError('Stripe is not configured');
+    }
     // Verify booking or order exists
     if (data.bookingId) {
       const booking = await prisma.booking.findUnique({
@@ -174,13 +190,13 @@ export class PaymentService {
           last_name: data.lastName,
           phone_number: data.phone,
           tx_ref: txRef,
-          callback_url: data.callbackUrl || `${config.clientUrl}/payment/callback`,
+          callback_url: data.callbackUrl || `${config.client.url}/payment/callback`,
           return_url: data.returnUrl,
           customization: data.customization,
         },
         {
           headers: {
-            Authorization: `Bearer ${config.chapa.secretKey}`,
+            Authorization: `Bearer ${config.payment.chapa.secretKey}`,
             'Content-Type': 'application/json',
           },
         }
@@ -230,6 +246,9 @@ export class PaymentService {
     data: ConfirmPaymentInput,
     userId: string
   ): Promise<Payment> {
+    if (!stripe) {
+      throw new PaymentError('Stripe is not configured');
+    }
     try {
       // Retrieve payment intent from Stripe
       const paymentIntent = await stripe.paymentIntents.retrieve(data.paymentIntentId);
@@ -296,7 +315,7 @@ export class PaymentService {
         `https://api.chapa.co/v1/transaction/verify/${txRef}`,
         {
           headers: {
-            Authorization: `Bearer ${config.chapa.secretKey}`,
+            Authorization: `Bearer ${config.payment.chapa.secretKey}`,
           },
         }
       );
@@ -669,6 +688,6 @@ export class PaymentService {
    * Get Stripe publishable key
    */
   static getStripePublishableKey(): string {
-    return config.stripe.publishableKey;
+    return config.payment.stripe.publishableKey;
   }
 }

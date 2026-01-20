@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import { config } from '../config';
+import { config } from '../config/index';
 
 const transporter = nodemailer.createTransport({
   host: config.email.host,
@@ -34,7 +34,7 @@ export const sendVerificationEmail = async (
   email: string,
   token: string
 ): Promise<boolean> => {
-  const verificationUrl = `${config.clientUrl}/verify-email?token=${token}`;
+  const verificationUrl = `${config.client.url}/verify-email?token=${token}`;
   const subject = 'Verify Your Email';
   const html = `
     <h2>Welcome to EthioAI Tourism!</h2>
@@ -51,7 +51,7 @@ export const sendPasswordResetEmail = async (
   email: string,
   token: string
 ): Promise<boolean> => {
-  const resetUrl = `${config.clientUrl}/reset-password?token=${token}`;
+  const resetUrl = `${config.client.url}/reset-password?token=${token}`;
   const subject = 'Reset Your Password';
   const html = `
     <h2>Reset Your Password</h2>

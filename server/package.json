@@ -5,6 +5,7 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsnd --respawn --transpile-only src/server.ts",
+    "dev:env": "copy .env.development .env && tsnd --respawn --transpile-only src/server.ts",
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "jest",

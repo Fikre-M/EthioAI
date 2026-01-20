@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import crypto from 'crypto';
 import bcrypt from 'bcryptjs';
-import { config } from '../config';
+import { config } from '../config/index';
 import { EmailService } from './email.service';
 import { log } from '../utils/logger';
 import { 

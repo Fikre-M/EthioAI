@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from 'cloudinary';
-import { config } from '../config';
+import { config } from '../config/index';
 import { log } from '../utils/logger';
 import { generateFileName, isImage, isVideo, isDocument } from '../middlewares/upload.middleware';
 

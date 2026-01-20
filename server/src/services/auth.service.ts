@@ -2,7 +2,7 @@ import { PrismaClient, User, UserRole } from '@prisma/client';
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
 import { generateTokenPair, verifyRefreshToken } from '../utils/jwt';
-import { config } from '../config';
+import { config } from '../config/index';
 import { log } from '../utils/logger';
 import { EmailService } from './email.service';
 import { PasswordResetService } from './password-reset.service';

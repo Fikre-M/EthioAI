@@ -1,366 +1,100 @@
-import { Request, Response, NextFunction } from 'express'
-import { cacheService, CacheOptions, CacheTTL } from '../services/cache.service'
-import { AuthRequest } from './auth.middleware'
-import logger from '../utils/logger'
-import crypto from 'crypto'
+import { Request, Response, NextFunction } from 'express';
+import { log } from '../utils/logger';
 
-export interface CacheMiddlewareOptions extends CacheOptions {
-  keyGenerator?: (req: Request) => string
-  condition?: (req: Request, res: Response) => boolean
-  varyBy?: string[] // Headers to vary cache by
-  skipCache?: (req: Request) => boolean
-  onHit?: (key: string) => void
-  onMiss?: (key: string) => void
+// Simple in-memory cache for development
+const cache = new Map<string, { data: any; expires: number }>();
+
+export interface CacheOptions {
+  ttl?: number; // Time to live in seconds
+  keyGenerator?: (req: Request) => string;
 }
 
 /**
- * Cache middleware factory
+ * Cache middleware
  */
-export function cache(options: CacheMiddlewareOptions = {}) {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      // Skip cache if condition is not met
-      if (options.skipCache && options.skipCache(req)) {
-        return next()
-      }
-
-      // Skip cache for non-GET requests by default
-      if (req.method !== 'GET') {
-        return next()
-      }
-
-      // Generate cache key
-      const cacheKey = options.keyGenerator 
-        ? options.keyGenerator(req)
-        : generateDefaultCacheKey(req, options.varyBy)
-
-      // Try to get from cache
-      const cachedResponse = await cacheService.get<{
-        statusCode: number
-        headers: Record<string, string>
-        body: any
-      }>(cacheKey, {
-        prefix: 'response',
-        ttl: options.ttl || CacheTTL.MEDIUM
-      })
-
-      if (cachedResponse) {
-        // Cache hit
-        if (options.onHit) {
-          options.onHit(cacheKey)
-        }
-
-        // Set cached headers
-        if (cachedResponse.headers) {
-          Object.entries(cachedResponse.headers).forEach(([key, value]) => {
-            res.setHeader(key, value)
-          })
-        }
-
-        // Add cache headers
-        res.setHeader('X-Cache', 'HIT')
-        res.setHeader('X-Cache-Key', cacheKey)
-
-        return res.status(cachedResponse.statusCode).json(cachedResponse.body)
-      }
-
-      // Cache miss - continue to route handler
-      if (options.onMiss) {
-        options.onMiss(cacheKey)
-      }
-
-      // Override res.json to cache the response
-      const originalJson = res.json.bind(res)
-      const originalStatus = res.status.bind(res)
-      let statusCode = 200
-
-      // Track status code
-      res.status = function(code: number) {
-        statusCode = code
-        return originalStatus(code)
-      }
-
-      res.json = function(body: any) {
-        // Only cache successful responses
-        if (statusCode >= 200 && statusCode < 300) {
-          // Check condition if provided
-          if (!options.condition || options.condition(req, res)) {
-            // Cache the response
-            const responseToCache = {
-              statusCode,
-              headers: extractCacheableHeaders(res),
-              body
-            }
-
-            cacheService.set(cacheKey, responseToCache, {
-              prefix: 'response',
-              ttl: options.ttl || CacheTTL.MEDIUM
-            }).catch(error => {
-              logger.error('Failed to cache response:', error)
-            })
-          }
-        }
-
-        // Add cache headers
-        res.setHeader('X-Cache', 'MISS')
-        res.setHeader('X-Cache-Key', cacheKey)
-
-        return originalJson(body)
-      }
-
-      next()
-    } catch (error) {
-      logger.error('Cache middleware error:', error)
-      next()
+export const cacheMiddleware = (options: CacheOptions = {}) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    const ttl = options.ttl || 300; // Default 5 minutes
+    const keyGenerator = options.keyGenerator || ((req) => `${req.method}:${req.originalUrl}`);
+    
+    const cacheKey = keyGenerator(req);
+    const cached = cache.get(cacheKey);
+    
+    if (cached && cached.expires > Date.now()) {
+      log.info('Cache hit', { key: cacheKey });
+      res.json(cached.data);
+      return;
     }
+    
+    // Override res.json to cache the response
+    const originalJson = res.json;
+    res.json = function(data: any) {
+      // Cache successful responses
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        cache.set(cacheKey, {
+          data,
+          expires: Date.now() + (ttl * 1000)
+        });
+        log.info('Response cached', { key: cacheKey, ttl });
+      }
+      
+      return originalJson.call(this, data);
+    };
+    
+    next();
+  };
+};
+
+/**
+ * Public cache (for unauthenticated requests)
+ */
+export const publicCache = (ttl: number) => cacheMiddleware({ ttl });
+
+/**
+ * User-specific cache
+ */
+export const userCache = (ttl: number) => cacheMiddleware({
+  ttl,
+  keyGenerator: (req) => {
+    const authReq = req as any;
+    const userId = authReq.userId || 'anonymous';
+    return `${req.method}:${req.originalUrl}:${userId}`;
   }
-}
+});
+
+/**
+ * Generic cache export for compatibility
+ */
+export const cache = cacheMiddleware;
 
 /**
  * Cache invalidation middleware
  */
-export function invalidateCache(patterns: string[] | ((req: Request) => string[])) {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      // Store patterns for later use
-      res.locals.cacheInvalidationPatterns = typeof patterns === 'function' 
-        ? patterns(req) 
-        : patterns
-
-      // Override res.json to invalidate cache after successful response
-      const originalJson = res.json.bind(res)
-      
-      res.json = function(body: any) {
-        // Only invalidate on successful responses
-        if (res.statusCode >= 200 && res.statusCode < 300) {
-          const patternsToInvalidate = res.locals.cacheInvalidationPatterns as string[]
-          
-          if (patternsToInvalidate && patternsToInvalidate.length > 0) {
-            // Invalidate cache patterns asynchronously
-            Promise.all(
-              patternsToInvalidate.map(pattern => 
-                cacheService.invalidatePattern(pattern, { prefix: 'response' })
-              )
-            ).then(results => {
-              const totalInvalidated = results.reduce((sum, count) => sum + count, 0)
-              if (totalInvalidated > 0) {
-                logger.info(`Invalidated ${totalInvalidated} cache entries`, {
-                  patterns: patternsToInvalidate,
-                  method: req.method,
-                  path: req.path
-                })
-              }
-            }).catch(error => {
-              logger.error('Cache invalidation error:', error)
-            })
+export const invalidateCache = (patterns: string[] | ((req: Request) => string[])) => {
+  return (req: Request, res: Response, next: NextFunction): void => {
+    // Store patterns for post-request invalidation
+    (req as any).cacheInvalidationPatterns = typeof patterns === 'function' ? patterns(req) : patterns;
+    
+    // Override res.json to invalidate cache after successful response
+    const originalJson = res.json;
+    res.json = function(data: any) {
+      if (res.statusCode >= 200 && res.statusCode < 300) {
+        const patternsToInvalidate = (req as any).cacheInvalidationPatterns || [];
+        
+        for (const pattern of patternsToInvalidate) {
+          // Simple pattern matching - in production, use Redis with pattern matching
+          for (const [key] of cache) {
+            if (key.includes(pattern.replace('*', ''))) {
+              cache.delete(key);
+              log.info('Cache invalidated', { key, pattern });
+            }
           }
         }
-
-        return originalJson(body)
       }
-
-      next()
-    } catch (error) {
-      logger.error('Cache invalidation middleware error:', error)
-      next()
-    }
-  }
-}
-
-/**
- * User-specific cache middleware
- */
-export function userCache(options: CacheMiddlewareOptions = {}) {
-  return cache({
-    ...options,
-    keyGenerator: (req: Request) => {
-      const authReq = req as AuthRequest
-      const userId = authReq.userId || 'anonymous'
-      const baseKey = options.keyGenerator 
-        ? options.keyGenerator(req)
-        : generateDefaultCacheKey(req, options.varyBy)
-      return `user:${userId}:${baseKey}`
-    }
-  })
-}
-
-/**
- * Public cache middleware (for public endpoints)
- */
-export function publicCache(ttl: number = CacheTTL.LONG) {
-  return cache({
-    ttl,
-    condition: (req: Request, res: Response) => {
-      // Only cache if no user-specific data
-      const authReq = req as AuthRequest
-      return !authReq.userId
-    }
-  })
-}
-
-/**
- * Generate default cache key from request
- */
-function generateDefaultCacheKey(req: Request, varyBy?: string[]): string {
-  const parts = [
-    req.method,
-    req.path,
-    JSON.stringify(req.query)
-  ]
-
-  // Add headers to vary by
-  if (varyBy && varyBy.length > 0) {
-    const headerValues = varyBy.map(header => 
-      req.headers[header.toLowerCase()] || ''
-    ).join('|')
-    parts.push(headerValues)
-  }
-
-  const keyString = parts.join('|')
-  return crypto.createHash('md5').update(keyString).digest('hex')
-}
-
-/**
- * Extract cacheable headers from response
- */
-function extractCacheableHeaders(res: Response): Record<string, string> {
-  const cacheableHeaders: Record<string, string> = {}
-  
-  // Headers that are safe to cache
-  const safeHeaders = [
-    'content-type',
-    'content-language',
-    'content-encoding',
-    'etag',
-    'last-modified',
-    'vary'
-  ]
-
-  safeHeaders.forEach(header => {
-    const value = res.getHeader(header)
-    if (value && typeof value === 'string') {
-      cacheableHeaders[header] = value
-    }
-  })
-
-  return cacheableHeaders
-}
-
-/**
- * Cache warming utility
- */
-export class CacheWarmer {
-  static async warmUserCache(userId: string, endpoints: string[]) {
-    logger.info(`Warming cache for user ${userId}`)
+      
+      return originalJson.call(this, data);
+    };
     
-    for (const endpoint of endpoints) {
-      try {
-        // This would typically make internal requests to warm the cache
-        // Implementation depends on your specific needs
-        logger.debug(`Warming cache for endpoint: ${endpoint}`)
-      } catch (error) {
-        logger.error(`Failed to warm cache for ${endpoint}:`, error)
-      }
-    }
-  }
-
-  static async warmPublicCache(endpoints: string[]) {
-    logger.info('Warming public cache')
-    
-    for (const endpoint of endpoints) {
-      try {
-        // This would typically make internal requests to warm the cache
-        logger.debug(`Warming public cache for endpoint: ${endpoint}`)
-      } catch (error) {
-        logger.error(`Failed to warm public cache for ${endpoint}:`, error)
-      }
-    }
-  }
-}
-
-/**
- * Cache statistics middleware
- */
-export function cacheStats() {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    if (req.path === '/cache/stats' && req.method === 'GET') {
-      try {
-        const stats = await cacheService.getStats()
-        return res.json({
-          success: true,
-          data: stats
-        })
-      } catch (error) {
-        logger.error('Cache stats error:', error)
-        return res.status(500).json({
-          success: false,
-          message: 'Failed to get cache statistics'
-        })
-      }
-    }
-    next()
-  }
-}
-
-/**
- * Cache management middleware
- */
-export function cacheManagement() {
-  return async (req: Request, res: Response, next: NextFunction) => {
-    if (req.path.startsWith('/cache/') && req.method === 'DELETE') {
-      try {
-        const authReq = req as AuthRequest
-        
-        // Only allow admins to manage cache
-        if (authReq.userRole !== 'ADMIN') {
-          return res.status(403).json({
-            success: false,
-            message: 'Admin access required'
-          })
-        }
-
-        const action = req.path.split('/')[2]
-        
-        switch (action) {
-          case 'clear':
-            const pattern = req.query.pattern as string
-            const cleared = await cacheService.clear(pattern)
-            return res.json({
-              success: true,
-              message: `Cleared ${cleared} cache entries`,
-              pattern
-            })
-            
-          case 'invalidate':
-            const invalidatePattern = req.query.pattern as string
-            if (!invalidatePattern) {
-              return res.status(400).json({
-                success: false,
-                message: 'Pattern parameter required'
-              })
-            }
-            
-            const invalidated = await cacheService.invalidatePattern(invalidatePattern)
-            return res.json({
-              success: true,
-              message: `Invalidated ${invalidated} cache entries`,
-              pattern: invalidatePattern
-            })
-            
-          default:
-            return res.status(404).json({
-              success: false,
-              message: 'Cache action not found'
-            })
-        }
-      } catch (error) {
-        logger.error('Cache management error:', error)
-        return res.status(500).json({
-          success: false,
-          message: 'Cache management failed'
-        })
-      }
-    }
-    next()
-  }
-}
+    next();
+  };
+};

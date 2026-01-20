@@ -7,9 +7,16 @@ import { EmailService } from '../services/email.service';
 import { BookingService } from '../services/booking.service';
 import { PaymentService } from '../services/payment.service';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || "", {
-  apiVersion: "2023-10-16",
-});
+// Initialize Stripe only if key is provided
+let stripe: Stripe | null = null;
+
+if (process.env.STRIPE_SECRET_KEY) {
+  stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: "2023-10-16",
+  });
+} else {
+  console.warn('⚠️ Stripe secret key not provided - Stripe webhooks disabled');
+}
 
 const prisma = new PrismaClient();
 
@@ -18,6 +25,12 @@ export class WebhookController {
    * Handle Stripe webhooks with proper verification
    */
   static async handleStripeWebhook(req: Request, res: Response): Promise<void> {
+    if (!stripe) {
+      log.error('Stripe not configured for webhooks');
+      res.status(500).json({ error: 'Stripe not configured' });
+      return;
+    }
+
     const sig = req.headers["stripe-signature"] as string;
     const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET || "";
     

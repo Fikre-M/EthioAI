@@ -1,5 +1,5 @@
 import OpenAI from 'openai';
-import { config } from '../config';
+import { config } from '../config/index';
 import { log } from '../utils/logger';
 import { ValidationError } from '../middlewares/error.middleware';
 

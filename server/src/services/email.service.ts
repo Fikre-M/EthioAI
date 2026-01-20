@@ -1,5 +1,5 @@
 import nodemailer from 'nodemailer';
-import { config } from '../config';
+import { config } from '../config/index';
 import { log } from '../utils/logger';
 
 export interface EmailOptions {
@@ -28,6 +28,12 @@ export class EmailService {
    */
   static async initialize(): Promise<void> {
     try {
+      // Skip email initialization in development if not configured
+      if (config.server.nodeEnv === 'development' && !config.email.user) {
+        log.info('Email service skipped in development (no configuration)');
+        return;
+      }
+
       this.transporter = nodemailer.createTransporter({
         host: config.email.host,
         port: config.email.port,
@@ -45,8 +51,13 @@ export class EmailService {
       await this.transporter.verify();
       log.info('Email service initialized successfully');
     } catch (error) {
-      log.error('Failed to initialize email service:', error);
-      throw error;
+      if (config.server.nodeEnv === 'production') {
+        log.error('Failed to initialize email service:', error);
+        throw error;
+      } else {
+        log.warn('Email service initialization failed (development mode):', error);
+        // Don't throw in development
+      }
     }
   }
 
@@ -55,8 +66,26 @@ export class EmailService {
    */
   static async sendEmail(options: EmailOptions): Promise<void> {
     try {
+      // Skip sending emails in development if not configured
+      if (config.server.nodeEnv === 'development' && !this.transporter) {
+        log.info('Email skipped in development', {
+          to: options.to,
+          subject: options.subject
+        });
+        return;
+      }
+
       if (!this.transporter) {
         await this.initialize();
+      }
+
+      // If still no transporter, skip in development
+      if (!this.transporter && config.server.nodeEnv === 'development') {
+        log.info('Email skipped - no transporter available', {
+          to: options.to,
+          subject: options.subject
+        });
+        return;
       }
 
       const mailOptions = {
@@ -80,7 +109,11 @@ export class EmailService {
         to: options.to,
         subject: options.subject,
       });
-      throw error;
+      
+      // Don't throw in development
+      if (config.server.nodeEnv === 'production') {
+        throw error;
+      }
     }
   }
 

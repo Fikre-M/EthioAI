@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { config } from '../config';
+import { config } from '../config/index';
 import { UnauthorizedError, ForbiddenError } from './error.middleware';
 import { log } from '../utils/logger';
 
@@ -98,19 +98,15 @@ export const requireRole = (allowedRoles: string[]) => {
 };
 
 /**
- * Require admin role
+ * Require specific roles (exported as object for compatibility)
  */
-export const requireAdmin = requireRole(['ADMIN']);
-
-/**
- * Require guide or admin role
- */
-export const requireGuideOrAdmin = requireRole(['GUIDE', 'ADMIN']);
-
-/**
- * Require vendor or admin role
- */
-export const requireVendorOrAdmin = requireRole(['VENDOR', 'ADMIN']);
+export const requireRoles = {
+  admin: requireRole(['ADMIN']),
+  guideOrAdmin: requireRole(['GUIDE', 'ADMIN']),
+  vendorOrAdmin: requireRole(['VENDOR', 'ADMIN']),
+  guide: requireRole(['GUIDE']),
+  vendor: requireRole(['VENDOR'])
+};
 
 /**
  * Validate refresh token

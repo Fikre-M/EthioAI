@@ -1,175 +1,67 @@
-import { Request, Response, NextFunction } from "express";
-import { PrismaClientKnownRequestError } from '@prisma/client/runtime/library';
+import { Request, Response, NextFunction } from 'express';
 import { ZodError } from 'zod';
 import { log } from '../utils/logger';
 import { ResponseUtil } from '../utils/response';
-import { config } from '../config';
-import { AuthRequest } from './auth.middleware';
-import { monitoringService } from '../services/monitoring.service';
 
-interface ErrorWithStatus extends Error {
-  statusCode?: number;
-  code?: string;
-  meta?: any;
+/**
+ * Custom error classes
+ */
+export class AppError extends Error {
+  public statusCode: number;
+  public code: string;
+  public isOperational: boolean;
+
+  constructor(message: string, statusCode: number, code: string) {
+    super(message);
+    this.statusCode = statusCode;
+    this.code = code;
+    this.isOperational = true;
+
+    Error.captureStackTrace(this, this.constructor);
+  }
+}
+
+export class ValidationError extends AppError {
+  public details: any;
+
+  constructor(message: string, details?: any) {
+    super(message, 400, 'VALIDATION_ERROR');
+    this.details = details;
+  }
+}
+
+export class UnauthorizedError extends AppError {
+  constructor(message: string = 'Unauthorized') {
+    super(message, 401, 'UNAUTHORIZED');
+  }
+}
+
+export class ForbiddenError extends AppError {
+  constructor(message: string = 'Forbidden') {
+    super(message, 403, 'FORBIDDEN');
+  }
+}
+
+export class NotFoundError extends AppError {
+  constructor(message: string = 'Resource not found') {
+    super(message, 404, 'NOT_FOUND');
+  }
+}
+
+export class ConflictError extends AppError {
+  constructor(message: string = 'Resource conflict') {
+    super(message, 409, 'CONFLICT');
+  }
+}
+
+export class InternalServerError extends AppError {
+  constructor(message: string = 'Internal server error') {
+    super(message, 500, 'INTERNAL_ERROR');
+  }
 }
 
 /**
- * Global error handler middleware
- * Handles all types of errors and returns standardized responses
- */
-export const errorHandler = (
-  err: ErrorWithStatus,
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction
-) => {
-  // Record error for monitoring
-  const errorId = monitoringService.recordError(err, {
-    userId: req.userId,
-    requestId: req.headers['x-request-id'] as string,
-    userAgent: req.get('User-Agent'),
-    ip: req.ip,
-    method: req.method,
-    url: req.originalUrl,
-    statusCode: err.statusCode
-  });
-
-  // Log the error with error ID
-  log.error(`Error in ${req.method} ${req.originalUrl} [${errorId}]`, {
-    errorId,
-    error: {
-      name: err.name,
-      message: err.message,
-      stack: err.stack,
-      code: err.code,
-    },
-    request: {
-      method: req.method,
-      url: req.originalUrl,
-      ip: req.ip,
-      userAgent: req.get('User-Agent'),
-      userId: req.userId,
-      body: req.body,
-      query: req.query,
-      params: req.params,
-    },
-  });
-
-  // Add error ID to response headers for tracking
-  res.setHeader('X-Error-ID', errorId);
-
-  // Handle Prisma errors
-  if (err instanceof PrismaClientKnownRequestError) {
-    return handlePrismaError(err, res);
-  }
-
-  // Handle Zod validation errors
-  if (err instanceof ZodError) {
-    return handleZodError(err, res);
-  }
-
-  // Handle JWT errors
-  if (err.name === 'JsonWebTokenError') {
-    return ResponseUtil.unauthorized(res, 'Invalid token');
-  }
-
-  if (err.name === 'TokenExpiredError') {
-    return ResponseUtil.unauthorized(res, 'Token expired');
-  }
-
-  // Handle custom application errors
-  if (err.statusCode) {
-    return ResponseUtil.error(
-      res,
-      err.message,
-      err.statusCode,
-      undefined,
-      {
-        code: err.code,
-        errorId,
-        ...(config.nodeEnv !== 'production' && { stack: err.stack }),
-      }
-    );
-  }
-
-  // Handle unexpected errors
-  return ResponseUtil.internalError(
-    res,
-    config.nodeEnv === 'production' 
-      ? 'Something went wrong' 
-      : err.message,
-    { errorId }
-  );
-};
-
-/**
- * Handle Prisma database errors
- */
-const handlePrismaError = (err: PrismaClientKnownRequestError, res: Response) => {
-  switch (err.code) {
-    case 'P2002':
-      // Unique constraint violation
-      const field = err.meta?.target as string[] | undefined;
-      const fieldName = field?.[0] || 'field';
-      return ResponseUtil.conflict(res, `${fieldName} already exists`);
-
-    case 'P2025':
-      // Record not found
-      return ResponseUtil.notFound(res, 'Record not found');
-
-    case 'P2003':
-      // Foreign key constraint violation
-      return ResponseUtil.badRequest(res, 'Invalid reference to related record');
-
-    case 'P2014':
-      // Required relation violation
-      return ResponseUtil.badRequest(res, 'Required relation is missing');
-
-    case 'P2021':
-      // Table does not exist
-      return ResponseUtil.internalError(res, 'Database configuration error');
-
-    case 'P2022':
-      // Column does not exist
-      return ResponseUtil.internalError(res, 'Database schema error');
-
-    default:
-      log.error('Unhandled Prisma error', { code: err.code, message: err.message });
-      return ResponseUtil.internalError(res, 'Database operation failed');
-  }
-};
-
-/**
- * Handle Zod validation errors
- */
-const handleZodError = (err: ZodError, res: Response) => {
-  const errors = err.errors.map((error) => ({
-    field: error.path.join('.'),
-    message: error.message,
-    code: error.code,
-    received: error.received,
-  }));
-
-  return ResponseUtil.validationError(res, errors, 'Validation failed');
-};
-
-/**
- * 404 Not Found handler
- */
-export const notFound = (req: Request, res: Response, next: NextFunction) => {
-  log.warn(`404 - Route not found: ${req.method} ${req.originalUrl}`, {
-    method: req.method,
-    url: req.originalUrl,
-    ip: req.ip,
-    userAgent: req.get('User-Agent'),
-  });
-
-  ResponseUtil.notFound(res, `Route ${req.method} ${req.originalUrl} not found`);
-};
-
-/**
- * Async error wrapper
- * Wraps async route handlers to catch errors automatically
+ * Async handler wrapper to catch async errors
  */
 export const asyncHandler = (fn: Function) => {
   return (req: Request, res: Response, next: NextFunction) => {
@@ -178,62 +70,89 @@ export const asyncHandler = (fn: Function) => {
 };
 
 /**
- * Custom error classes
+ * Global error handler middleware
  */
-export class AppError extends Error {
-  public statusCode: number;
-  public code?: string;
-  public meta?: any;
+export const errorHandler = (
+  error: Error | AppError | ZodError,
+  req: Request,
+  res: Response,
+  next: NextFunction
+): void => {
+  let statusCode = 500;
+  let code = 'INTERNAL_ERROR';
+  let message = 'Internal server error';
+  let details: any = undefined;
 
-  constructor(message: string, statusCode: number = 500, code?: string, meta?: any) {
-    super(message);
-    this.statusCode = statusCode;
-    this.code = code;
-    this.meta = meta;
-    this.name = 'AppError';
-
-    Error.captureStackTrace(this, this.constructor);
+  // Handle custom app errors
+  if (error instanceof AppError) {
+    statusCode = error.statusCode;
+    code = error.code;
+    message = error.message;
+    
+    if (error instanceof ValidationError) {
+      details = error.details;
+    }
   }
-}
-
-export class ValidationError extends AppError {
-  constructor(message: string = 'Validation failed', meta?: any) {
-    super(message, 400, 'VALIDATION_ERROR', meta);
-    this.name = 'ValidationError';
+  // Handle Zod validation errors
+  else if (error instanceof ZodError) {
+    statusCode = 400;
+    code = 'VALIDATION_ERROR';
+    message = 'Validation failed';
+    details = error.errors.map(err => ({
+      field: err.path.join('.'),
+      message: err.message,
+      code: err.code
+    }));
   }
-}
-
-export class NotFoundError extends AppError {
-  constructor(message: string = 'Resource not found') {
-    super(message, 404, 'NOT_FOUND');
-    this.name = 'NotFoundError';
+  // Handle Prisma errors
+  else if (error.name === 'PrismaClientKnownRequestError') {
+    const prismaError = error as any;
+    
+    switch (prismaError.code) {
+      case 'P2002':
+        statusCode = 409;
+        code = 'CONFLICT';
+        message = 'Resource already exists';
+        details = { field: prismaError.meta?.target };
+        break;
+      case 'P2025':
+        statusCode = 404;
+        code = 'NOT_FOUND';
+        message = 'Resource not found';
+        break;
+      default:
+        statusCode = 400;
+        code = 'DATABASE_ERROR';
+        message = 'Database operation failed';
+    }
   }
-}
-
-export class UnauthorizedError extends AppError {
-  constructor(message: string = 'Unauthorized') {
-    super(message, 401, 'UNAUTHORIZED');
-    this.name = 'UnauthorizedError';
+  // Handle JWT errors
+  else if (error.name === 'JsonWebTokenError') {
+    statusCode = 401;
+    code = 'INVALID_TOKEN';
+    message = 'Invalid token';
   }
-}
-
-export class ForbiddenError extends AppError {
-  constructor(message: string = 'Forbidden') {
-    super(message, 403, 'FORBIDDEN');
-    this.name = 'ForbiddenError';
+  else if (error.name === 'TokenExpiredError') {
+    statusCode = 401;
+    code = 'TOKEN_EXPIRED';
+    message = 'Token expired';
   }
-}
-
-export class ConflictError extends AppError {
-  constructor(message: string = 'Resource conflict') {
-    super(message, 409, 'CONFLICT');
-    this.name = 'ConflictError';
+  // Handle other known errors
+  else if (error.message) {
+    message = error.message;
   }
-}
 
-export class PaymentError extends AppError {
-  constructor(message: string = 'Payment processing failed', meta?: any) {
-    super(message, 402, 'PAYMENT_ERROR', meta);
-    this.name = 'PaymentError';
-  }
-}
+  // Log error
+  log.error('Request error', error, {
+    method: req.method,
+    url: req.originalUrl,
+    ip: req.ip,
+    userAgent: req.get('User-Agent'),
+    userId: (req as any).userId,
+    statusCode,
+    code
+  });
+
+  // Send error response
+  ResponseUtil.error(res, statusCode, code, message, details);
+};

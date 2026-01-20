@@ -4,7 +4,6 @@ import helmet from 'helmet';
 import { config } from 'dotenv';
 import { errorHandler } from './middlewares/error.middleware';
 import { notFoundHandler } from './middlewares/not-found.middleware';
-import { logger } from './utils/logger';
 
 // Import routes
 import authRoutes from './routes/auth.routes';
@@ -21,34 +20,58 @@ import itineraryRoutes from './routes/itinerary.routes';
 import transportRoutes from './routes/transport.routes';
 import marketplaceRoutes from './routes/marketplace.routes';
 
-// Import services for initialization
-import { EmailService } from './services/email.service';
-import { createPasswordResetTable } from './services/password-reset.service';
-import { createEmailVerificationTable } from './services/email-verification.service';
-
 // Load environment variables
 config();
 
 // Create Express application
 export const app: Application = express();
 
-// Initialize services
+// Initialize services asynchronously (don't block startup)
 async function initializeServices() {
   try {
-    // Initialize email service
-    await EmailService.initialize();
+    // Import services dynamically to avoid circular dependencies
+    const { EmailService } = await import('./services/email.service');
     
-    // Create required database tables
-    await createPasswordResetTable();
-    await createEmailVerificationTable();
+    // Initialize email service (safe to fail)
+    try {
+      await EmailService.initialize();
+      console.log('✅ Email service initialized');
+    } catch (emailError) {
+      console.warn('⚠️ Email service initialization skipped:', emailError.message);
+    }
     
-    logger.info('All services initialized successfully');
+    // Try to initialize database-dependent services
+    try {
+      const { PrismaClient } = await import('@prisma/client');
+      const prisma = new PrismaClient();
+      
+      // Test database connection
+      await prisma.$connect();
+      console.log('✅ Database connection successful');
+      
+      // Create required database tables
+      const { createPasswordResetTable } = await import('./services/password-reset.service');
+      const { createEmailVerificationTable } = await import('./services/email-verification.service');
+      
+      await createPasswordResetTable();
+      await createEmailVerificationTable();
+      
+      console.log('✅ Database services initialized successfully');
+      await prisma.$disconnect();
+    } catch (dbError) {
+      console.warn('⚠️ Database services initialization failed (server will continue without database features):', dbError.message);
+      console.warn('💡 To enable database features:');
+      console.warn('   1. Start MySQL server');
+      console.warn('   2. Create database: CREATE DATABASE ethioai_tourism;');
+      console.warn('   3. Run: npx prisma migrate dev');
+    }
+    
   } catch (error) {
-    logger.error('Failed to initialize services:', error);
+    console.warn('⚠️ Service initialization failed (continuing anyway):', error.message);
   }
 }
 
-// Initialize services on startup
+// Initialize services in background
 initializeServices();
 
 // Security middleware
@@ -56,9 +79,11 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      styleSrc: ["'self'", "'unsafe-inline'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       scriptSrc: ["'self'"],
       imgSrc: ["'self'", "data:", "https:"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+      connectSrc: ["'self'", "https:"],
     },
   },
 }));
@@ -86,11 +111,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Logging middleware
 app.use((req: Request, res: Response, next: NextFunction) => {
-  logger.info(`${req.method} ${req.path}`, {
-    ip: req.ip,
-    userAgent: req.get('User-Agent'),
-    timestamp: new Date().toISOString()
-  });
+  console.log(`${req.method} ${req.path}`);
   next();
 });
 

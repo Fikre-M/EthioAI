@@ -1,0 +1,706 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserRole {
+  USER
+  ADMIN
+  GUIDE
+  VENDOR
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  COMPLETED
+  REFUNDED
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  STRIPE
+  CHAPA
+  TELEBIRR
+  CBE_BIRR
+}
+
+enum TourStatus {
+  DRAFT
+  PUBLISHED
+  SUSPENDED
+  ARCHIVED
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum ReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+// Core Models
+model User {
+  id              String         @id @default(uuid())
+  name            String?
+  email           String         @unique
+  passwordHash    String
+  role            UserRole       @default(USER)
+  isEmailVerified Boolean        @default(false)
+  avatar          String?
+  phone           String?
+  bio             String?
+  location        String?
+  dateOfBirth     DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  
+  // Relations
+  refreshTokens   RefreshToken[]
+  bookings        Booking[]
+  reviews         Review[]
+  orders          Order[]
+  chatMessages    ChatMessage[]
+  itineraries     Itinerary[]
+  vendorProfile   VendorProfile?
+  guideProfile    GuideProfile?
+  payments        Payment[]
+  wishlistItems   WishlistItem[]
+  
+  // Notification system relations
+  notifications           Notification[]
+  notificationPreferences NotificationPreferences?
+  deviceRegistrations     DeviceRegistration[]
+
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  token     String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([token])
+  @@map("refresh_tokens")
+}
+
+// Tour Management
+model Tour {
+  id              String      @id @default(uuid())
+  title           String
+  slug            String      @unique
+  description     String
+  shortDescription String?
+  images          Json        // Array of image URLs
+  price           Decimal
+  discountPrice   Decimal?
+  duration        Int         // Duration in days
+  maxGroupSize    Int
+  difficulty      String      // Easy, Moderate, Challenging
+  status          TourStatus  @default(DRAFT)
+  featured        Boolean     @default(false)
+  
+  // Location data
+  startLocation   Json        // {name, coordinates, address}
+  locations       Json        // Array of location objects
+  
+  // Tour details
+  included        Json        // Array of included items
+  excluded        Json        // Array of excluded items
+  itinerary       Json        // Day-by-day itinerary
+  
+  // Metadata
+  tags            Json        // Array of tags
+  category        String
+  language        String      @default("en")
+  
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  // Relations
+  bookings        Booking[]
+  reviews         Review[]
+  guideId         String?
+  guide           GuideProfile? @relation(fields: [guideId], references: [id])
+
+  @@index([status, featured])
+  @@index([category])
+  @@index([slug])
+  @@map("tours")
+}
+
+model GuideProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  experience      Int      // Years of experience
+  languages       Json     // Array of languages spoken
+  specialties     Json     // Array of specialties
+  certification   String?
+  rating          Decimal?
+  totalReviews    Int      @default(0)
+  isVerified      Boolean  @default(false)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  tours           Tour[]
+
+  @@map("guide_profiles")
+}
+
+// Booking System
+model Booking {
+  id              String        @id @default(uuid())
+  bookingNumber   String        @unique
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  tourId          String
+  tour            Tour          @relation(fields: [tourId], references: [id])
+  
+  // Booking details
+  startDate       DateTime
+  endDate         DateTime
+  adults          Int           @default(1)
+  children        Int           @default(0)
+  totalPrice      Decimal       
+  discountAmount  Decimal?      
+  promoCode       String?
+  
+  // Status and metadata
+  status          BookingStatus @default(PENDING)
+  notes           String?       
+  specialRequests String?       
+  
+  // Participant information
+  participants    Json          // Array of participant objects
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  payments        Payment[]
+
+  @@index([userId])
+  @@index([tourId])
+  @@index([status])
+  @@index([startDate])
+  @@map("bookings")
+}
+
+// Payment System
+model Payment {
+  id              String        @id @default(uuid())
+  paymentId       String        @unique // External payment ID (Stripe, Chapa)
+  userId          String
+  user            User          @relation(fields: [userId], references: [id])
+  bookingId       String?
+  booking         Booking?      @relation(fields: [bookingId], references: [id])
+  orderId         String?
+  order           Order?        @relation(fields: [orderId], references: [id])
+  
+  amount          Decimal       
+  currency        String        @default("USD")
+  method          PaymentMethod
+  status          PaymentStatus @default(PENDING)
+  
+  // Payment gateway data
+  gatewayResponse Json?         // Store gateway response
+  failureReason   String?
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([paymentId])
+  @@map("payments")
+}
+
+// Marketplace System
+model VendorProfile {
+  id              String   @id @default(uuid())
+  userId          String   @unique
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  businessName    String
+  description     String   
+  logo            String?
+  banner          String?
+  address         String
+  phone           String
+  website         String?
+  
+  // Business details
+  businessLicense String?
+  taxId           String?
+  isVerified      Boolean  @default(false)
+  
+  // Ratings
+  rating          Decimal? 
+  totalReviews    Int      @default(0)
+  totalSales      Int      @default(0)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Relations
+  products        Product[]
+
+  @@map("vendor_profiles")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  slug        String    @unique
+  description String?   
+  image       String?
+  parentId    String?
+  parent      Category? @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // Relations
+  products    Product[]
+
+  @@map("categories")
+}
+
+model Product {
+  id              String        @id @default(uuid())
+  name            String
+  slug            String        @unique
+  description     String        
+  shortDescription String?      
+  images          Json          // Array of image URLs
+  price           Decimal       
+  discountPrice   Decimal?      
+  
+  // Inventory
+  stock           Int           @default(0)
+  sku             String?       @unique
+  weight          Decimal?      
+  dimensions      Json?         // {length, width, height}
+  
+  // Product details
+  materials       Json?         // Array of materials
+  colors          Json?         // Array of available colors
+  sizes           Json?         // Array of available sizes
+  
+  // Status and metadata
+  status          ContentStatus @default(DRAFT)
+  featured        Boolean       @default(false)
+  
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  
+  // Relations
+  vendorId        String
+  vendor          VendorProfile @relation(fields: [vendorId], references: [id])
+  categoryId      String
+  category        Category      @relation(fields: [categoryId], references: [id])
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  // Relations
+  orderItems      OrderItem[]
+  reviews         Review[]
+  wishlistItems   WishlistItem[]
+
+  @@index([vendorId])
+  @@index([categoryId])
+  @@index([status, featured])
+  @@map("products")
+}
+
+model Order {
+  id              String      @id @default(uuid())
+  orderNumber     String      @unique
+  userId          String
+  user            User        @relation(fields: [userId], references: [id])
+  
+  // Order totals
+  subtotal        Decimal     
+  tax             Decimal      @default(0)
+  shipping        Decimal      @default(0)
+  discount        Decimal      @default(0)
+  total           Decimal     
+  
+  // Status and metadata
+  status          OrderStatus @default(PENDING)
+  notes           String?     
+  
+  // Shipping information
+  shippingAddress Json        // Address object
+  billingAddress  Json?       // Address object
+  trackingNumber  String?
+  
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  
+  // Relations
+  items           OrderItem[]
+  payments        Payment[]
+
+  @@index([userId])
+  @@index([status])
+  @@map("orders")
+}
+
+model OrderItem {
+  id          String  @id @default(uuid())
+  orderId     String
+  order       Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product @relation(fields: [productId], references: [id])
+  
+  quantity    Int
+  price       Decimal  // Price at time of order
+  total       Decimal 
+  
+  // Product variant info (if applicable)
+  variant     Json?   // {color, size, etc.}
+
+  @@map("order_items")
+}
+
+model WishlistItem {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+  @@map("wishlist_items")
+}
+
+// Review System
+model Review {
+  id          String       @id @default(uuid())
+  userId      String
+  user        User         @relation(fields: [userId], references: [id])
+  
+  // Review target (tour or product)
+  tourId      String?
+  tour        Tour?        @relation(fields: [tourId], references: [id])
+  productId   String?
+  product     Product?     @relation(fields: [productId], references: [id])
+  
+  rating      Int          // 1-5 stars
+  title       String?
+  comment     String       
+  images      Json?        // Array of image URLs
+  
+  status      ReviewStatus @default(PENDING)
+  isVerified  Boolean      @default(false) // Verified purchase/booking
+  
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  @@index([tourId])
+  @@index([productId])
+  @@index([userId])
+  @@index([status])
+  @@map("reviews")
+}
+
+// Chat System
+model ChatMessage {
+  id          String   @id @default(uuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id])
+  
+  message     String   
+  response    String?  
+  language    String   @default("en")
+  
+  // Message metadata
+  messageType String   @default("text") // text, tour_recommendation, etc.
+  metadata    Json?    // Additional message data
+  
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@map("chat_messages")
+}
+
+// Itinerary System
+model Itinerary {
+  id          String        @id @default(uuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id])
+  
+  title       String
+  description String?       
+  startDate   DateTime
+  endDate     DateTime
+  
+  // Itinerary data
+  destinations Json         // Array of destinations
+  activities   Json         // Array of activities
+  budget       Decimal?     
+  
+  // Sharing and collaboration
+  isPublic     Boolean      @default(false)
+  shareToken   String?      @unique
+  
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([userId])
+  @@index([shareToken])
+  @@map("itineraries")
+}
+
+// Cultural Content System
+model CulturalContent {
+  id          String        @id @default(uuid())
+  title       String
+  slug        String        @unique
+  content     String        
+  excerpt     String?       
+  images      Json?         // Array of image URLs
+  
+  // Content type and categorization
+  type        String        // article, recipe, artifact, etc.
+  category    String
+  tags        Json?         // Array of tags
+  language    String        @default("en")
+  
+  // Status and metadata
+  status      ContentStatus @default(DRAFT)
+  featured    Boolean       @default(false)
+  
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+  
+  // Author information
+  authorId    String?
+  authorName  String?
+  
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+
+  @@index([type, category])
+  @@index([status, featured])
+  @@index([slug])
+  @@map("cultural_content")
+}
+
+// Promo Codes
+model PromoCode {
+  id              String   @id @default(uuid())
+  code            String   @unique
+  description     String?
+  
+  // Discount details
+  discountType    String   // percentage, fixed_amount
+  discountValue   Decimal  
+  minOrderAmount  Decimal? 
+  maxDiscount     Decimal? 
+  
+  // Usage limits
+  usageLimit      Int?     // Total usage limit
+  usageCount      Int      @default(0)
+  userLimit       Int?     // Per-user limit
+  
+  // Validity
+  validFrom       DateTime
+  validUntil      DateTime
+  isActive        Boolean  @default(true)
+  
+  // Applicable to
+  applicableToTours    Boolean @default(true)
+  applicableToProducts Boolean @default(true)
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([code])
+  @@index([validFrom, validUntil])
+  @@map("promo_codes")
+}
+
+// Notification System Enums
+enum NotificationType {
+  BOOKING_CONFIRMATION
+  BOOKING_REMINDER
+  BOOKING_CANCELLED
+  PAYMENT_SUCCESS
+  PAYMENT_FAILED
+  CHAT_MESSAGE
+  CHAT_MENTION
+  SYSTEM_ANNOUNCEMENT
+  SECURITY_ALERT
+  PROMOTIONAL
+}
+
+enum DeliveryChannel {
+  IN_APP
+  PUSH
+  EMAIL
+  SMS
+}
+
+enum NotificationPriority {
+  LOW
+  NORMAL
+  HIGH
+  CRITICAL
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  DELIVERED
+  READ
+  FAILED
+}
+
+enum Platform {
+  IOS
+  ANDROID
+  WEB
+}
+
+// Notification System Models
+model Notification {
+  id          String               @id @default(uuid())
+  userId      String
+  user        User                 @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  type        NotificationType
+  title       String
+  content     String               
+  data        Json?                // Additional notification data
+  channels    Json                 // Array of DeliveryChannel
+  priority    NotificationPriority @default(NORMAL)
+  status      NotificationStatus   @default(PENDING)
+  
+  readAt      DateTime?
+  scheduledAt DateTime?
+  expiresAt   DateTime?
+  
+  createdAt   DateTime             @default(now())
+  updatedAt   DateTime             @updatedAt
+
+  @@index([userId])
+  @@index([type])
+  @@index([status])
+  @@index([createdAt])
+  @@index([scheduledAt])
+  @@map("notifications")
+}
+
+model NotificationPreferences {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Channel preferences for each notification type
+  channels    Json     // ChannelPreferences object
+  
+  // Quiet hours settings
+  quietHours  Json?    // QuietHours object
+  
+  // General settings
+  frequency   String   @default("immediate") // immediate, hourly, daily
+  language    String   @default("en")
+  timezone    String   @default("UTC")
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("notification_preferences")
+}
+
+model DeviceRegistration {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  deviceToken String   @unique
+  platform    Platform
+  appVersion  String?
+  isActive    Boolean  @default(true)
+  lastUsed    DateTime @default(now())
+  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+  @@index([deviceToken])
+  @@index([isActive])
+  @@map("device_registrations")
+}
+
+model NotificationTemplate {
+  id          String           @id @default(uuid())
+  type        NotificationType
+  locale      String           @default("en")
+  
+  title       String
+  content     String           
+  emailSubject String?
+  pushTitle   String?
+  pushBody    String?
+  
+  variables   Json?            // Array of template variables
+  version     Int              @default(1)
+  isActive    Boolean          @default(true)
+  
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@unique([type, locale, version])
+  @@index([type, locale])
+  @@index([isActive])
+  @@map("notification_templates")
+}
