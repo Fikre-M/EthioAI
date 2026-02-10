@@ -5,6 +5,11 @@ import { APP_NAME } from '@utils/constants'
 export const Footer = () => {
   const { t } = useTranslation()
 
+  // Scroll to top when clicking footer links
+  const handleLinkClick = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
   return (
     <footer className="border-t bg-background">
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
@@ -64,22 +69,22 @@ export const Footer = () => {
             <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">{t('footer.explore.title')}</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/tours" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/tours" onClick={handleLinkClick} className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('footer.explore.tours')}
                 </Link>
               </li>
               <li>
-                <Link to="/destinations" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/destinations" onClick={handleLinkClick} className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('footer.explore.destinations')}
                 </Link>
               </li>
               <li>
-                <Link to="/cultural" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/cultural" onClick={handleLinkClick} className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('footer.explore.culture')}
                 </Link>
               </li>
               <li>
-                <Link to="/marketplace" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/marketplace" onClick={handleLinkClick} className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('footer.explore.marketplace')}
                 </Link>
               </li>
@@ -91,22 +96,22 @@ export const Footer = () => {
             <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">{t('footer.company.title')}</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/about" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/about" onClick={handleLinkClick} className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('footer.company.about')}
                 </Link>
               </li>
               <li>
-                <Link to="/contact" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/contact" onClick={handleLinkClick} className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('nav.contact')}
                 </Link>
               </li>
               <li>
-                <Link to="/careers" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/careers" onClick={handleLinkClick} className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('footer.company.careers')}
                 </Link>
               </li>
               <li>
-                <Link to="/blog" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/blog" onClick={handleLinkClick} className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('footer.company.blog')}
                 </Link>
               </li>
@@ -118,22 +123,22 @@ export const Footer = () => {
             <h3 className="font-semibold mb-3 sm:mb-4 text-sm sm:text-base">{t('footer.support.title')}</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/help" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/help" onClick={handleLinkClick} className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('footer.support.help')}
                 </Link>
               </li>
               <li>
-                <Link to="/faq" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/faq" onClick={handleLinkClick} className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('footer.support.safety')}
                 </Link>
               </li>
               <li>
-                <Link to="/privacy" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/privacy" onClick={handleLinkClick} className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('footer.support.privacy')}
                 </Link>
               </li>
               <li>
-                <Link to="/terms" className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
+                <Link to="/terms" onClick={handleLinkClick} className="text-xs sm:text-sm text-muted-foreground hover:text-primary transition-colors">
                   {t('footer.support.terms')}
                 </Link>
               </li>
