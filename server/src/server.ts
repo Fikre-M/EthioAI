@@ -10,14 +10,17 @@ let googleAI = null;
 let osmClient = null;
 
 // Google AI (Gemini) - ACTIVE
-if (process.env.GOOGLE_AI_API_KEY) {
+if (process.env.GOOGLE_AI_API_KEY && process.env.GOOGLE_AI_API_KEY !== 'your-google-ai-api-key-here') {
   try {
     const { GoogleGenerativeAI } = require('@google/generative-ai');
     googleAI = new GoogleGenerativeAI(process.env.GOOGLE_AI_API_KEY);
     log.info('✅ Google AI (Gemini) initialized');
   } catch (error) {
-    log.warn('⚠️ Google AI initialization failed:', error.message);
+    log.warn('⚠️ Google AI initialization failed:', (error as Error).message);
   }
+} else {
+  log.warn('⚠️ Google AI API key not configured. Please update GOOGLE_AI_API_KEY in .env file');
+  log.info('💡 Get your FREE API key from: https://makersuite.google.com/app/apikey');
 }
 
 // OpenStreetMap + Leaflet - ACTIVE (No API key required!)
