@@ -7,7 +7,7 @@ config();
 
 // Initialize AI and Map services
 let googleAI = null;
-let mapboxClient = null;
+let osmClient = null;
 
 // Google AI (Gemini) - ACTIVE
 if (process.env.GOOGLE_AI_API_KEY) {
@@ -20,26 +20,68 @@ if (process.env.GOOGLE_AI_API_KEY) {
   }
 }
 
-// Mapbox - ACTIVE
-if (process.env.MAPBOX_SECRET_TOKEN) {
-  try {
-    // Mapbox client setup (using axios for API calls)
-    const axios = require('axios');
-    mapboxClient = {
-      baseURL: 'https://api.mapbox.com',
-      token: process.env.MAPBOX_SECRET_TOKEN,
-      async request(endpoint, params = {}) {
-        const url = `${this.baseURL}${endpoint}`;
-        const response = await axios.get(url, {
-          params: { ...params, access_token: this.token }
-        });
-        return response.data;
+// OpenStreetMap + Leaflet - ACTIVE (No API key required!)
+try {
+  const axios = require('axios');
+  osmClient = {
+    nominatimUrl: process.env.OSM_NOMINATIM_URL || 'https://nominatim.openstreetmap.org',
+    overpassUrl: process.env.OSM_OVERPASS_URL || 'https://overpass-api.de/api/interpreter',
+    tileServer: process.env.OSM_TILE_SERVER || 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    
+    async geocode(query, options = {}) {
+      const params = {
+        q: query,
+        format: 'json',
+        limit: options.limit || 5,
+        addressdetails: 1
+      };
+      
+      // Add country code if specified
+      if (options.country) {
+        params.countrycodes = options.country.toLowerCase();
       }
-    };
-    log.info('✅ Mapbox client initialized');
-  } catch (error) {
-    log.warn('⚠️ Mapbox initialization failed:', error.message);
-  }
+      
+      const response = await axios.get(`${this.nominatimUrl}/search`, { 
+        params,
+        headers: {
+          'User-Agent': 'EthioAI-Tourism-Platform/1.0 (https://ethioai.com)'
+        }
+      });
+      return response.data;
+    },
+    
+    async reverseGeocode(lat, lon) {
+      const params = {
+        lat,
+        lon,
+        format: 'json',
+        addressdetails: 1
+      };
+      
+      const response = await axios.get(`${this.nominatimUrl}/reverse`, { 
+        params,
+        headers: {
+          'User-Agent': 'EthioAI-Tourism-Platform/1.0 (https://ethioai.com)'
+        }
+      });
+      return response.data;
+    },
+    
+    async getDirections(start, end) {
+      // For directions, we'll use a simple routing service or return coordinates
+      // This is a basic implementation - for production, consider using OSRM or GraphHopper
+      return {
+        message: 'Basic routing available. For advanced routing, consider integrating OSRM or GraphHopper.',
+        start,
+        end,
+        provider: 'openstreetmap'
+      };
+    }
+  };
+  
+  log.info('✅ OpenStreetMap (OSM) client initialized - FREE service!');
+} catch (error) {
+  log.warn('⚠️ OSM client initialization failed:', error.message);
 }
 
 // OpenAI - PREPARED (commented out for later)
@@ -72,7 +114,7 @@ if (process.env.MAPBOX_SECRET_TOKEN) {
 // }
 
 // Export clients for use in routes
-export { googleAI, mapboxClient };
+export { googleAI, osmClient };
 // Export prepared clients (commented out)
 // export { openaiClient, anthropicClient };
 
@@ -88,7 +130,7 @@ const server = app.listen(PORT, () => {
   
   // Log active services
   if (googleAI) log.info('🤖 Google AI service: ACTIVE');
-  if (mapboxClient) log.info('🗺️ Mapbox service: ACTIVE');
+  if (osmClient) log.info('🗺️ OpenStreetMap service: ACTIVE (FREE)');
 });
 
 // Graceful shutdown

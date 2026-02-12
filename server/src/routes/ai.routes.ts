@@ -44,7 +44,7 @@ router.post('/chat', async (req: Request, res: Response) => {
 
     // Get the generative model
     const model = googleAI.getGenerativeModel({ 
-      model: process.env.GOOGLE_AI_MODEL || 'gemini-1.5-flash-8b' 
+      model: process.env.GOOGLE_AI_MODEL || 'gemini-1.5-flash-latest' 
     });
 
     // Prepare the prompt with context
@@ -62,7 +62,7 @@ router.post('/chat', async (req: Request, res: Response) => {
       data: {
         message: text,
         provider: 'google-gemini',
-        model: process.env.GOOGLE_AI_MODEL || 'gemini-1.5-flash',
+        model: process.env.GOOGLE_AI_MODEL || 'gemini-1.5-flash-latest',
         tokensUsed: response.usageMetadata?.totalTokenCount || 0,
       },
     });
@@ -70,11 +70,25 @@ router.post('/chat', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('Google AI chat error:', error);
     
-    res.status(500).json({
-      success: false,
-      message: 'Failed to generate AI response',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
-    });
+    // Provide a helpful fallback response for development
+    if (process.env.NODE_ENV === 'development') {
+      res.json({
+        success: true,
+        data: {
+          message: `I'm currently experiencing technical difficulties with the AI service. This is a fallback response for development. Original error: ${error.message}`,
+          provider: 'fallback-development',
+          model: 'development-fallback',
+          tokensUsed: 0,
+          note: 'This is a development fallback. In production, please ensure your Google AI API key is valid and has access to the specified model.',
+        },
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to generate AI response',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      });
+    }
   }
 });
 
@@ -101,7 +115,7 @@ router.post('/analyze', async (req: Request, res: Response) => {
     }
 
     const model = googleAI.getGenerativeModel({ 
-      model: process.env.GOOGLE_AI_MODEL || 'gemini-1.5-flash-8b' 
+      model: process.env.GOOGLE_AI_MODEL || 'gemini-2.0-flash' 
     });
 
     let prompt = '';
@@ -136,11 +150,25 @@ router.post('/analyze', async (req: Request, res: Response) => {
   } catch (error: any) {
     console.error('AI analysis error:', error);
     
-    res.status(500).json({
-      success: false,
-      message: 'Failed to analyze text',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
-    });
+    // Provide a helpful fallback response for development
+    if (process.env.NODE_ENV === 'development') {
+      res.json({
+        success: true,
+        data: {
+          analysis: `Analysis fallback for development. Original request: "${text}" (${analysisType}). Error: ${error.message}`,
+          analysisType,
+          provider: 'fallback-development',
+          tokensUsed: 0,
+          note: 'This is a development fallback. In production, please ensure your Google AI API key is valid.',
+        },
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        message: 'Failed to analyze text',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      });
+    }
   }
 });
 
@@ -176,7 +204,7 @@ router.get('/models', async (req: Request, res: Response) => {
         success: false,
         message: 'Could not list models',
         error: listError.message,
-        suggestion: 'Try using models: gemini-pro, gemini-1.5-flash, or gemini-1.5-pro',
+        suggestion: 'Try using models: gemini-2.0-flash, gemini-2.0-flash-exp, or gemini-1.5-flash',
       });
     }
 
@@ -198,7 +226,7 @@ router.get('/health', async (req: Request, res: Response) => {
     const services = {
       'google-gemini': {
         available: !!googleAI,
-        model: process.env.GOOGLE_AI_MODEL || 'gemini-1.5-flash',
+        model: process.env.GOOGLE_AI_MODEL || 'gemini-2.0-flash',
       },
       // PREPARED for later
       // 'openai': {
