@@ -95,17 +95,13 @@ export const TourCard = ({ tour }: TourCardProps) => {
             
             {/* Action Buttons */}
             <div className="flex gap-2 w-full">
-              <button 
-                onClick={(e) => {
-                  e.preventDefault()
-                  e.stopPropagation()
-                  // Show more details in a modal or expand card
-                  alert(`More details about: ${tour.title}\n\nDuration: ${tour.duration}\nLocation: ${tour.location}\nMax Group: ${tour.maxGroupSize}\nDifficulty: ${tour.difficulty}\n\nHighlights:\n${tour.highlights.join('\n')}\n\nIncluded:\n${tour.included.join('\n')}`)
-                }}
+              <Link 
+                to={`/tours/${tour.id}`}
+                onClick={(e) => e.stopPropagation()}
                 className="flex-1 px-3 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium transition-colors text-center"
               >
                 View Details
-              </button>
+              </Link>
               <Link 
                 to={`/booking/${tour.id}`}
                 onClick={(e) => e.stopPropagation()}

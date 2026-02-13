@@ -3,6 +3,7 @@ import { LoginPage, RegisterPage, ForgotPasswordPage, ProfilePage, EditProfilePa
 import { HomePage } from '@features/dashboard/pages'
 import { ChatPage } from '@features/chat/pages'
 import { ToursPage } from '@features/tours/pages/ToursPage'
+import { TourDetailPage } from '@features/tours/pages/TourDetailPage'
 import { DestinationsPage } from '@features/destinations/pages/DestinationsPage'
 import { BookingPage, CartPage, CheckoutPage, MyBookingsPage } from '@features/booking/pages'
 import { PaymentPage, ConfirmationPage } from '@features/payment/pages'
@@ -110,6 +111,11 @@ export const AppRoutes = () => {
         <Route
           path={ROUTES.TOURS}
           element={<ToursPage />}
+        />
+
+        <Route
+          path="/tours/:tourId"
+          element={<TourDetailPage />}
         />
 
         <Route
