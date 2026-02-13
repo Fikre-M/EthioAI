@@ -289,6 +289,15 @@ export class TourController {
       return ResponseUtil.error(res, 400, 'BAD_REQUEST', 'Tour is not available for booking');
     }
 
+    // Parse dates properly
+    const startDateObj = new Date(startDate);
+    const endDateObj = new Date(endDate);
+
+    // Validate dates
+    if (isNaN(startDateObj.getTime()) || isNaN(endDateObj.getTime())) {
+      return ResponseUtil.error(res, 400, 'BAD_REQUEST', 'Invalid date format');
+    }
+
     // Check existing bookings for the date range
     const existingBookings = await prisma.booking.findMany({
       where: {
@@ -299,10 +308,10 @@ export class TourController {
         OR: [
           {
             startDate: {
-              lte: new Date(endDate)
+              lte: endDateObj
             },
             endDate: {
-              gte: new Date(startDate)
+              gte: startDateObj
             }
           }
         ]
