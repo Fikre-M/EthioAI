@@ -1,17 +1,17 @@
-import express from "express";
-import cors from "cors";
-import bodyParser from "body-parser";
-import paymentRoutes from "./routes/payment.routes";
+import { config } from 'dotenv';
+import { app } from './app';
+import { log } from './utils/logger';
 
-const app = express();
-const port = process.env.PORT || 5000;
+// Load environment variables
+config();
 
-app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+// This file is deprecated - use server.ts instead
+// Keeping for backward compatibility only
 
-app.use("/api/payments", paymentRoutes);
+const PORT = process.env.PORT || 5000;
 
-app.listen(port, () => {
-  console.log(`Server running on port ${port}`);
+app.listen(PORT, () => {
+  log.warn('⚠️ Using deprecated index.ts - please use server.ts instead');
+  log.info(`Server running on port ${PORT}`);
 });
+
